@@ -1,12 +1,14 @@
-.page {
-  display:     flex;
-  padding-top: 50px;
+.flexContainer {
   padding-top: 50px;
   margin:      0 auto;
-  margin-left: 40px;
-
 }
 
-.table {
-  width: 400px;
+.button {
+  width: 172px;
+  background: rgba(104, 19, 223, 0.24);
+  color: #000;
+}
+
+.button:hover {
+  background: #6813DF !important;
 }

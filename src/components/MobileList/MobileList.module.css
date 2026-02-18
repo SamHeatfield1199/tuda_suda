@@ -1,0 +1,25 @@
+.container {
+  width: 100%;
+  padding: 0 12px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.cardTitle {
+  margin-bottom: 8px;
+}
+
+.list {
+  padding-left: 16px;
+  margin: 0;
+}
+
+.emptyMessage {
+  color: #999;
+}
