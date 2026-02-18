@@ -1,5 +1,6 @@
 import styles from "./MobileList.module.css";
 
+// Компонент для отображения списка мест и людей на мобильных устройствах
 export default function MobileList({ places, people }) {
   return (
     <div className={styles.container}>

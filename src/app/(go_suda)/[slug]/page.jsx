@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import MobileList from "@/components/MobileList/MobileList";
 import tableData from "@/mocks/go_suda_table.json";
 import useIsMobile from "@/hooks/useIsMobile";
+import AppButton from "@/components/Button";
 
 const { people, places } = tableData;
 
@@ -39,6 +40,7 @@ const dataSource = places.map((place) => {
   return row;
 });
 
+// Главный компонент страницы "Го сюда"
 export default function GoSuda() {
   const [status, setStatus] = useState(null); // null | 'success' | 'error'
   const isMobile = useIsMobile();
@@ -64,7 +66,6 @@ export default function GoSuda() {
           {isMobile ? (
             <MobileList places={places} people={people} />
           ) : (
-            <div className="table-wrapper">
               <Table
                 className={styles.table}
                 columns={columns}
@@ -72,12 +73,9 @@ export default function GoSuda() {
                 bordered
                 pagination={false}
               />
-            </div>
           )}
 
-          <Button className={styles.button} type="primary" onClick={handleCopy}>
-            Отправить любимкам
-          </Button>
+          <AppButton size="large" title={' Отправить любимкам'} color={'lilac'} onClick={handleCopy}></AppButton>
 
           {status === "success" && (
             <Alert
