@@ -1,5 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import {ConfigProvider, ThemeConfig} from "antd";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -11,6 +12,13 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const appTheme: ThemeConfig = {
+  token: {
+    green: '#49CC2F',
+    purple: '#6813DF',
+  },
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -19,7 +27,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        {children}
+        <ConfigProvider theme={appTheme}>
+          {children}
+        </ConfigProvider>
       </body>
     </html>
   );
