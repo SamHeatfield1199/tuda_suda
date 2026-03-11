@@ -6,7 +6,7 @@ import Image from "next/image";
 import AppButton from "@/components/Button";
 import {Form, Input, Space} from "antd";
 import React, {useState} from "react";
-import {CloseCircleOutlined} from "@ant-design/icons";
+import {checkDuplicate} from "@/utils/duplicates";
 
 interface ListItem {
     name: string;
@@ -22,22 +22,6 @@ export default function Home() {
 
     const [personInputError, setPersonInputError] = useState('');
     const [placeInputError, setPlaceInputError] = useState('');
-
-    function checkDuplicate <T extends Record<K, string>, K extends keyof T>(
-        value: string,
-        collection: Iterable<T>,
-        key: K,
-    ): boolean {
-        const normalized = value.toLowerCase();
-
-        for (const item of collection) {
-            if (item[key].toLowerCase() === normalized) {
-                return true;
-            }
-        }
-
-        return false;
-    }
 
     function addPerson() {
         setPersonInputError('');
