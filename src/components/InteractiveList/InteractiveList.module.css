@@ -1,0 +1,19 @@
+.block {
+    min-height: 300px;
+}
+
+.inputGroup {
+    gap: 24px;
+    margin-top: 10px;
+}
+
+.list {
+    margin-inline-start: 20px;
+}
+
+.listItem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 8px;
+}

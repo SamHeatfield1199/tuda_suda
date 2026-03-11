@@ -2,16 +2,25 @@
 
 import styles from "./page.module.css";
 import Header from "@/components/Header";
-import Image from "next/image";
 import AppButton from "@/components/Button";
-import {Input, Space} from "antd";
 import React, {useState} from "react";
-import {CloseCircleOutlined} from "@ant-design/icons";
+import {checkDuplicate} from "@/utils/duplicates";
+import InteractiveList from "@/components/InteractiveList/InteractiveList";
+
+interface ListItem {
+    name: string;
+    id: string
+}
 
 export default function Home() {
-    const [persons, setPersons] = useState<string[]>([]);
+    const [persons, setPersons] = useState<ListItem[]>([]);
+    const [places, setPlaces] = useState<ListItem[]>([]);
 
     const [personInputName, setPersonName] = useState('');
+    const [placeInputName, setPlaceName] = useState('');
+
+    const [personInputError, setPersonInputError] = useState('');
+    const [placeInputError, setPlaceInputError] = useState('');
 
     function addPerson() {
         const name = personInputName.trim();
@@ -20,15 +29,45 @@ export default function Home() {
             return;
         }
 
+        if (checkDuplicate(name, persons, 'name')) {
+            setPersonInputError('Такое имя уже есть в списке');
+
+            return;
+        }
+
         setPersons([
             ...persons,
-            name,
+            { id: crypto.randomUUID(), name },
         ]);
         setPersonName('');
     }
 
-    function removePerson(index: number) {
-        setPersons(persons.filter((name, i) =>  i !== index));
+    function removePerson(id: string) {
+        setPersons(persons.filter((person) => person.id !== id));
+    }
+
+    function addPlace() {
+        const newPlace = placeInputName.trim();
+
+        if (!newPlace) {
+            return;
+        }
+
+        if (checkDuplicate(newPlace, places, 'name')) {
+            setPlaceInputError('Такое место уже есть в списке');
+
+            return;
+        }
+
+        setPlaces([
+            ...places,
+            { id: crypto.randomUUID(), name: newPlace },
+        ]);
+        setPlaceName('');
+    }
+
+    function removePlace(id: string) {
+        setPlaces(places.filter((place) => place.id !== id));
     }
 
     return (
@@ -36,26 +75,38 @@ export default function Home() {
             <Header title={'Го туда'}/>
             <div className={styles.page}>
                 <main className={styles.main}>
-                    <Space vertical>
-                        <Space>
-                            <h2 style={{ margin: 0 }}>
-                                Любимки
-                            </h2>
-                            <Image src={'/heart.png'} alt={''} width={30} height={30}/>
-                        </Space>
-                        <Space style={{gap: 24, marginTop: 10}}>
-                            <Input value={personInputName} onChange={e => setPersonName(e.target.value)} placeholder={'Имя'} />
-                            <AppButton title={'Добавить'} color={'lilac'} onClick={addPerson}></AppButton>
-                        </Space>
-                        <ul style={{ marginInlineStart: 20, marginTop: 20 }}>
-                            {persons.map((person, index) =>
-                                <li key={index} style={{paddingBottom: 8, display: 'flex', alignItems: 'center', gap: 12}}>
-                                    <span>{person}</span>
-                                    <CloseCircleOutlined onClick={() => removePerson(index)} />
-                                </li>
-                            )}
-                        </ul>
-                    </Space>
+                    <InteractiveList
+                        title="Любимки"
+                        icon="/heart.png"
+                        iconAlt="Иконка сердца"
+                        items={persons}
+                        inputValue={personInputName}
+                        onInputChange={(value) => {
+                            setPersonName(value);
+                            setPersonInputError('');
+                        }}
+                        onAdd={addPerson}
+                        onRemove={removePerson}
+                        inputError={personInputError}
+                        placeholder="Имя"
+                    />
+
+                    <InteractiveList
+                        title="Места"
+                        icon="/star.png"
+                        iconAlt="Иконка звезды"
+                        items={places}
+                        inputValue={placeInputName}
+                        onInputChange={(value) => {
+                            setPlaceName(value);
+                            setPlaceInputError('');
+                        }}
+                        onAdd={addPlace}
+                        onRemove={removePlace}
+                        inputError={placeInputError}
+                        placeholder="Название"
+                        extraButton={<AppButton title="Выбрать на карте" color={'lilac'} />}
+                    />
                     <AppButton size="large" title={'Поехали'} color={'grass'}></AppButton>
                 </main>
             </div>
