@@ -6,6 +6,7 @@ import AppButton from "@/components/Button";
 import React, {useState} from "react";
 import {checkDuplicate} from "@/utils/duplicates";
 import InteractiveList from "@/components/InteractiveList/InteractiveList";
+import { MapPickerButton } from "@/components/MapPickerButton";
 
 interface ListItem {
     name: string;
@@ -105,7 +106,7 @@ export default function Home() {
                         onRemove={removePlace}
                         inputError={placeInputError}
                         placeholder="Название"
-                        extraButton={<AppButton title="Выбрать на карте" color={'lilac'} />}
+                        extraButton={<MapPickerButton />}
                     />
                     <AppButton size="large" title={'Поехали'} color={'grass'}></AppButton>
                 </main>
