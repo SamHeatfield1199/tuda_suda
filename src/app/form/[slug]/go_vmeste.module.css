@@ -1,0 +1,91 @@
+.flexContainer {
+  padding-top: 50px;
+  margin: 0 auto;
+}
+
+
+.placesContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 220px;
+  font-family: 'Nunito', sans-serif;
+}
+
+.placesTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.placesTitle .ant-typography {
+  margin: 0 !important;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  color: #1a1a2e;
+}
+
+.placesStar {
+  font-size: 24px;
+}
+
+.placesCard {
+  background: #c9b8e8;
+  border-radius: 20px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 4px 16px rgba(180, 140, 220, 0.3);
+  margin-bottom: 18px;
+}
+
+.placesItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.placesLabel {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.placesDivider {
+  height: 1.5px;
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 2px;
+}
+
+.placesGoBtn.ant-btn {
+  background: #c8f0c8 !important;
+  border: none !important;
+  border-radius: 16px !important;
+  height: 48px !important;
+  font-family: 'Nunito', sans-serif;
+  font-size: 18px !important;
+  font-weight: 800 !important;
+  color: #1a4d1a !important;
+  box-shadow: 0 4px 12px rgba(100, 200, 100, 0.25);
+  transition: all 0.2s;
+}
+
+.placesGoBtn.ant-btn:hover {
+  background: #aee8ae !important;
+  transform: translateY(-2px);
+}
+
+.placesCheckbox {
+  background: none;
+  border: 2px solid #d9d9d9;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 4px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

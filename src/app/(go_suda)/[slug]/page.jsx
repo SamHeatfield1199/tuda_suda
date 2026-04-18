@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import styles from "./go_suda.module.css";
-import { Alert, Button, Layout, Flex, Table } from "antd";
+import { Alert, Layout, Flex, Table } from "antd";
 import Header from "@/components/Header";
 import MobileList from "@/components/MobileList/MobileList";
 import tableData from "@/mocks/go_suda_table.json";

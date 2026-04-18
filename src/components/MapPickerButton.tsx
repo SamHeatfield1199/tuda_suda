@@ -13,27 +13,31 @@ interface PickedPlace {
 
 declare global {
   interface Window {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ymaps: any;
   }
-}
-
-// Генерируем ссылку для шаринга в Яндекс.Картах
-function getYandexShareLink(place: PickedPlace): string {
-  if (place.orgId) {
-    return `https://yandex.ru/maps/org/${place.orgId}/`;
-  }
-  const [lon, lat] = place.coords;
-  const lonR = lon.toFixed(5);
-  const latR = lat.toFixed(5);
-  return `https://yandex.ru/maps/?pt=${lonR},${latR}&z=16`;
 }
 
 // Компонент кнопки для выбора места на карте
 export function MapPickerButton() {
   const [open, setOpen]     = useState(false);
   const [picked, setPicked] = useState<PickedPlace | null>(null);
-  const mapRef              = useRef<any>(null);
-  const shareLink           = picked ? getYandexShareLink(picked) : "";
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mapRef    = useRef<any>(null);
+  const shareLink = picked ? getYandexShareLink(picked) : "";
+
+  // Генерируем ссылку для шаринга в Яндекс.Картах
+  function getYandexShareLink(place: PickedPlace): string {
+    if (place.orgId) {
+      return `https://yandex.ru/maps/org/${place.orgId}/`;
+    }
+    
+    const [lon, lat] = place.coords;
+    const lonR       = lon.toFixed(5);
+    const latR       = lat.toFixed(5);
+
+    return `https://yandex.ru/maps/?pt=${lonR},${latR}&z=16`;
+  }
 
   // Инициализация карты и установка обработчиков
   const initMap = () => {
@@ -56,36 +60,40 @@ export function MapPickerButton() {
       searchControl.options.set({ provider: "yandex#search" });
 
       // Обработчик кликов по карте
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       map.events.add("click", (e: any) => {
         const coords = e.get("coords") as [number, number];
         const [lat, lon] = coords;
 
         window.ymaps
           .geocode(coords, { kind: "house", results: 1 })
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .then((res: any) => {
             const firstGeo = res.geoObjects.get(0);
-            const address  = firstGeo?.getAddressLine() ?? "";
-            const meta     = firstGeo?.properties.get("CompanyMetaData");
-            const orgId    = meta?.id ?? undefined;
-            const name     = meta?.name ?? address;
+            const address = firstGeo?.getAddressLine() ?? "";
+            const meta = firstGeo?.properties.get("CompanyMetaData");
+            const orgId = meta?.id ?? undefined;
+            const name = meta?.name ?? address;
 
             setPicked({ name, coords: [lon, lat], orgId, address });
           });
       });
 
       // Обработчик выбора результата в поиске
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       searchControl.events.add("resultselect", (e: any) => {
-        const index   = e.get("index");
+        const index = e.get("index");
         const results = searchControl.getResultsArray();
-        const result  = results[index];
-        
+        const result = results[index];
+
         if (!result) return;
 
-        const coords     = result.geometry.getCoordinates() as [number, number];
+        const coords = result.geometry.getCoordinates() as [number, number];
         const [lat, lon] = coords;
-        const orgId      = result.properties.get("id") ?? undefined;
-        const name       = result.properties.get("name") ?? result.properties.get("text") ?? "";
-        const address    = result.properties.get("description") ?? "";
+        const orgId = result.properties.get("id") ?? undefined;
+        const name =
+          result.properties.get("name") ?? result.properties.get("text") ?? "";
+        const address = result.properties.get("description") ?? "";
 
         setPicked({
           name,
@@ -156,7 +164,11 @@ export function MapPickerButton() {
               />
               <Button
                 icon={<CopyOutlined />}
-                onClick={() => navigator.clipboard.writeText(picked.orgId ? `${picked.name}: ${shareLink}` : shareLink)}
+                onClick={() =>
+                  navigator.clipboard.writeText(
+                    picked.orgId ? `${picked.name}: ${shareLink}` : shareLink,
+                  )
+                }
               >
                 Копировать
               </Button>
