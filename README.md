@@ -45,3 +45,33 @@ bun install
 ```bash
 bun dev
 ```
+
+## Server API
+
+Серверные методы живут прямо внутри проекта на Next.js App Router.
+
+- `src/app/api/forms/route.ts` - HTTP endpoint
+- `src/server/forms/service.ts` - валидация и серверная бизнес-логика
+- `src/server/forms/repository.ts` - запись формы в SQLite
+- `src/server/db.ts` - подключение к базе и инициализация таблиц
+
+Схема работы:
+
+1. Клиент отправляет запрос на `/api/forms`
+2. Route handler принимает JSON
+3. Service валидирует входные данные
+4. Repository хранит методы работы с SQLite
+
+Переменные окружения:
+
+```bash
+DATABASE_URL=./data/app.db
+```
+
+Пример запроса:
+
+```bash
+curl -X POST http://localhost:3000/api/forms \
+  -H "Content-Type: application/json" \
+  -d '{"places":["Кафе","Музей"],"people":["Аня","Илья"]}'
+```

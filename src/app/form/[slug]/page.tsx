@@ -1,18 +1,21 @@
 "use client";
+
 import Header from "@/components/Header";
-import {Flex, Layout, Typography } from "antd";
-import styles from "./go_vmeste.module.css";
-const { Title } = Typography;
-import { useState } from "react";
 import AppButton from "@/components/Button";
 import Image from "next/image";
+import { useParams } from "next/navigation";
+import { useState } from "react";
+import { Alert, Flex, Layout, Typography } from "antd";
+import styles from "./go_vmeste.module.css";
 
-// Тип для места
+const { Title } = Typography;
+
 interface Place {
   id: string;
   label: string;
 }
 
+type SubmitStatus = "success" | "error" | null;
 
 const PLACES: Place[] = [
   { id: "1", label: "Музей" },
@@ -20,17 +23,71 @@ const PLACES: Place[] = [
   { id: "3", label: "Ресторан" },
 ];
 
-// Страница с формой для выбора мест
 export default function Form() {
+  const params = useParams<{ slug: string }>();
+  const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
 
-  //TODO: Добавить useMemo когда начнем получать списки
   const [checked, setChecked] = useState<Record<string, boolean>>(
     PLACES.reduce((acc, place) => ({ ...acc, [place.id]: false }), {}),
   );
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<SubmitStatus>(null);
+  const [submitError, setSubmitError]   = useState("");
 
-  // Функция для переключения состояния выбранного места
   const toggle = (id: string) =>
     setChecked((prev) => ({ ...prev, [id]: !prev[id] }));
+
+  const handleSubmit = async () => {
+    const selectedPlaces = PLACES.filter((place) => checked[place.id]).map((place) => ({
+      id: place.id,
+      name: place.label,
+    }));
+
+    if (!slug) {
+      setSubmitStatus("error");
+      setSubmitError("Не удалось определить форму для отправки.");
+      return;
+    }
+
+    if (selectedPlaces.length === 0) {
+      setSubmitStatus("error");
+      setSubmitError("Выберите хотя бы одно место.");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setSubmitStatus(null);
+      setSubmitError("");
+
+      const response = await fetch(`/api/forms/${slug}/responses`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          places: selectedPlaces,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorBody = (await response.json().catch(() => null)) as
+          | { error?: string }
+          | null;
+
+        throw new Error(errorBody?.error ?? "Не удалось отправить форму.");
+      }
+
+      setSubmitStatus("success");
+    } catch (error) {
+      setSubmitStatus("error");
+      setSubmitError(
+        error instanceof Error ? error.message : "Не удалось отправить форму.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <Layout style={{ width: "100%", minHeight: "100vh" }}>
@@ -47,7 +104,7 @@ export default function Form() {
             <Title level={3} className={styles.placesTitle}>
               Места
             </Title>
-            <Image src={"/star.png"} alt={"star"} width={30} height={30} />
+            <Image src="/star.png" alt="star" width={30} height={30} />
           </div>
 
           <div className={styles.placesCard}>
@@ -74,9 +131,28 @@ export default function Form() {
 
           <AppButton
             size="large"
-            title={"Поехали!"}
-            color={"grass"}
-          ></AppButton>
+            title={isSubmitting ? "Отправляем..." : "Отправить"}
+            color="grass"
+            onClick={handleSubmit}
+          />
+
+          {submitStatus === "success" && (
+            <Alert
+              message="Ответ отправлен"
+              description="Ваш выбор сохранился. Можно закрывать страницу."
+              type="success"
+              showIcon
+            />
+          )}
+
+          {submitStatus === "error" && (
+            <Alert
+              message="Ошибка отправки"
+              description={submitError}
+              type="error"
+              showIcon
+            />
+          )}
         </div>
       </Flex>
     </Layout>
