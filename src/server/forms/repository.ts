@@ -9,9 +9,9 @@ function createSlug() {
 }
 
 export function createForm(input: CreateFormInput): FormRecord {
-  const now = new Date().toISOString();
+  const now    = new Date().toISOString();
   const formId = randomUUID();
-  const slug = createSlug();
+  const slug   = createSlug();
 
   const people: FormPerson[] = input.people.map((name) => ({
     id: randomUUID(),

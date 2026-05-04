@@ -40,6 +40,16 @@
   margin-bottom: 18px;
 }
 
+.peopleCard {
+  background: #c9b8e8;
+  border-radius: 20px;
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-shadow: 0 4px 16px rgba(180, 140, 220, 0.3);
+}
+
 .placesItem {
   display: flex;
   align-items: center;
@@ -47,10 +57,53 @@
   cursor: pointer;
 }
 
+.peopleItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+}
+
 .placesLabel {
   font-size: 16px;
   font-weight: 600;
   color: #1a1a2e;
+}
+
+.personToggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 72px;
+  height: 26px;
+  padding: 2px;
+  border: 1.5px solid #1a1a2e;
+  border-radius: 999px;
+  background: #f8f5fb;
+  transition: background 0.2s ease;
+}
+
+.personToggleActive {
+  background: #fff4f4;
+}
+
+.personToggleThumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ff2b1c;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease;
+}
+
+.personToggleActive .personToggleThumb {
+  transform: translateX(46px);
 }
 
 .placesDivider {

@@ -7,6 +7,10 @@ import type {
   SubmittedPlaceInput,
 } from "@/server/form-submissions/types";
 
+function normalizePersonId(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
 function normalizePlaces(items: unknown): SubmittedPlaceInput[] {
   if (!Array.isArray(items)) {
     return [];
@@ -35,10 +39,15 @@ export function parseCreateFormSubmissionInput(
   body: unknown,
 ): CreateFormSubmissionInput {
   const normalizedSlug = slug.trim();
+  const userId = normalizePersonId((body as Record<string, unknown> | null)?.userId);
   const places = normalizePlaces((body as Record<string, unknown> | null)?.places);
 
   if (!normalizedSlug) {
     throw new HttpError("Form slug is required", 400);
+  }
+
+  if (!userId) {
+    throw new HttpError("User id is required", 400);
   }
 
   if (places.length === 0) {
@@ -47,6 +56,7 @@ export function parseCreateFormSubmissionInput(
 
   return {
     slug: normalizedSlug,
+    userId,
     places,
   };
 }
