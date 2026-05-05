@@ -1,0 +1,16 @@
+version: '3.9'
+services:
+  app:
+    build: .
+    container_name: tudasuda-app
+    working_dir: /app
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./:/app
+      - /app/node_modules
+      - ./data:/app/data
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: /app/data/app.db
+    command: npm run dev

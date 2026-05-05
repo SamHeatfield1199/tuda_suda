@@ -4,10 +4,13 @@ import { HttpError } from "@/server/http-error";
 
 export async function POST(request: Request) {
   try {
-    const data = createFormRecord(await request.json());
+    const body = await request.json();
+    const data = createFormRecord(body);
 
     return NextResponse.json(data, { status: 201 });
   } catch (error) {
+    console.error('Error creating form:', error);
+
     if (error instanceof HttpError) {
       return NextResponse.json(
         {

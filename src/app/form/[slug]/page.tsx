@@ -80,7 +80,7 @@ export default function Form() {
       setSubmitStatus(null);
       setSubmitError("");
 
-      const response = await fetch(`/api/forms/${slug}/responses`, {
+      const response = await fetch(`/api/forms/${slug}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -197,7 +197,7 @@ export default function Form() {
 
         {submitStatus === "success" && (
           <Alert
-            message="Ответ отправлен"
+            title="Ответ отправлен"
             description="Ваш выбор сохранился. Можно закрывать страницу."
             type="success"
             showIcon
@@ -206,7 +206,7 @@ export default function Form() {
 
         {submitStatus === "error" && (
           <Alert
-            message="Ошибка отправки"
+            title="Ошибка отправки"
             description={submitError}
             type="error"
             showIcon
