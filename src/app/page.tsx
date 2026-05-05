@@ -4,6 +4,7 @@ import styles from "./page.module.css";
 import Header from "@/components/Header";
 import AppButton from "@/components/Button";
 import React, {useState} from "react";
+import Toast from "@/components/Toast";
 import {checkDuplicate} from "@/utils/duplicates";
 import InteractiveList from "@/components/InteractiveList/InteractiveList";
 import { MapPickerButton } from "@/components/MapPickerButton";
@@ -71,6 +72,45 @@ export default function Home() {
         setPlaces(places.filter((place) => place.id !== id));
     }
 
+    function validateForm(persons: ListItem[], places: ListItem[]): boolean {
+        if (persons.length === 0) {
+            Toast.show({type: 'error', message: 'Добавьте хотя бы одного человека.'});
+            return false;
+        }
+        if (places.length === 0) {
+            Toast.show({type: 'error', message: 'Добавьте хотя бы одно место.'});
+            return false;
+        }
+
+        return true;
+    }
+
+    function createForm() {
+        if (!validateForm(persons, places)) {
+            return;
+        }
+        fetch('/api/forms', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                people: persons.map((person) => person.name),
+                places: places.map((place) => place.name),
+            }),
+        })
+            .then((response) => {
+                if (!response.ok) {
+                    Toast.show({type: 'error', message: 'Ошибка при создании формы.'});
+                    return;
+                }
+                Toast.show({type: 'success', message: 'Форма успешно создана!'});
+            })
+            .catch(() => {
+                Toast.show({type: 'error', message: 'Произошла ошибка при отправке данных.'});
+            });
+    }
+
     return (
         <>
             <Header title={'Го туда'}/>
@@ -108,7 +148,7 @@ export default function Home() {
                         placeholder="Название"
                         extraButton={<MapPickerButton />}
                     />
-                    <AppButton size="large" title={'Поехали'} color={'grass'}></AppButton>
+                    <AppButton size="large" title={'Поехали'} color={'grass'} onClick={createForm}></AppButton>
                 </main>
             </div>
         </>
