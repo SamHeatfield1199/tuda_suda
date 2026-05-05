@@ -54,6 +54,7 @@ function createDatabase() {
     CREATE TABLE IF NOT EXISTS form_submissions (
       id TEXT PRIMARY KEY,
       form_slug TEXT NOT NULL,
+      person_id TEXT,
       selected_places TEXT NOT NULL,
       created_at TEXT NOT NULL
     );
@@ -67,6 +68,16 @@ function createDatabase() {
 
   if (!hasLinkColumn) {
     db.exec("ALTER TABLE form_places ADD COLUMN link TEXT");
+  }
+
+  const formSubmissionsColumns = db
+    .prepare("PRAGMA table_info(form_submissions)")
+    .all() as Array<{ name: string }>;
+
+  const hasPersonIdColumn = formSubmissionsColumns.some((column) => column.name === "person_id");
+
+  if (!hasPersonIdColumn) {
+    db.exec("ALTER TABLE form_submissions ADD COLUMN person_id TEXT");
   }
 
   return db;
