@@ -2,13 +2,13 @@ import "server-only";
 
 import { randomUUID } from "node:crypto";
 import { db } from "@/server/db";
-import type { CreateFormInput, FormPlace, FormPerson, FormRecord } from "@/server/forms/types";
+import type { CreateFormInput, FormPlace, FormPerson, FormRecord } from "@/server/survey/types";
 
 function createSlug() {
   return randomUUID().replace(/-/g, "").slice(0, 8);
 }
 
-export function createForm(input: CreateFormInput): FormRecord {
+export function createSurvey(input: CreateFormInput): FormRecord {
   const now    = new Date().toISOString();
   const formId = randomUUID();
   const slug   = createSlug();
@@ -74,5 +74,55 @@ export function createForm(input: CreateFormInput): FormRecord {
     people,
     places,
     createdAt: now,
+  };
+}
+
+export function getSurveyResult(slug: string) {
+  console.log('here2')
+  const surveyRecord = db.prepare(`
+    SELECT *
+    FROM forms
+    WHERE slug = @slug
+  `).get({slug});
+
+  console.log(surveyRecord)
+  if (!surveyRecord) {
+    throw new Error(`Survey with slug ${slug} not found`);
+  }
+
+  console.log('here 3')
+  const people = db.prepare(`
+    SELECT id, name
+    FROM form_people
+    WHERE form_id = @formId
+  `).all({formId: surveyRecord.id});
+
+  const places = db.prepare(`
+    SELECT id, name, link
+    FROM form_places
+    WHERE form_id = @formId
+  `).all({formId: surveyRecord.id});
+
+  type Submission = { person_id: string; selected_places: string };
+  console.log('here 4')
+
+  /*const submissions: Submission[] = db.prepare(`
+    SELECT form_submissions.person_id, form_submissions.selected_places
+    FROM form_submissions
+    WHERE form_slug = @slug
+  `).all({slug});*/
+
+  return {
+    id: surveyRecord.id,
+    slug: surveyRecord.slug,
+    createdAt: surveyRecord.created_at,
+    people,
+    places: places.map((place: FormPlace) => ({
+      ...place,
+      /*chosenBy: submissions
+          .filter((submission: Submission) => submission.selected_places === place.id)
+          .map((submission: Submission) => submission.person_id),*/
+      people: [],
+    })),
   };
 }

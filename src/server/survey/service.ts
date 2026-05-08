@@ -1,8 +1,8 @@
 import "server-only";
 
 import { HttpError } from "@/server/http-error";
-import { createForm } from "@/server/forms/repository";
-import type { CreateFormInput, FormPlaceInput } from "@/server/forms/types";
+import {createSurvey, getSurveyResult} from "@/server/survey/repository";
+import type { CreateFormInput, FormPlaceInput } from "@/server/survey/types";
 
 function normalizeList(items: unknown) {
   if (!Array.isArray(items)) {
@@ -47,7 +47,7 @@ function normalizePlaces(items: unknown): FormPlaceInput[] {
     .filter((item): item is FormPlaceInput => item !== null);
 }
 
-export function parseCreateFormInput(body: unknown): CreateFormInput {
+export function parseCreateSurveyInput(body: unknown): CreateFormInput {
   const places = normalizePlaces((body as Record<string, unknown> | null)?.places);
   const people = normalizeList((body as Record<string, unknown> | null)?.people);
 
@@ -62,8 +62,16 @@ export function parseCreateFormInput(body: unknown): CreateFormInput {
   return { places, people };
 }
 
-export function createFormRecord(body: unknown) {
-  const input = parseCreateFormInput(body);
+export function createSurveyRecord(body: unknown) {
+  const input = parseCreateSurveyInput(body);
 
-  return createForm(input);
+  return createSurvey(input);
+}
+
+export function getSurvey(slug: string) {
+    if (!/^[a-zA-Z0-9]{8}$/.test(slug)) {
+        throw new HttpError("Invalid slug format. It must be an 8-character alphanumeric hash.", 400);
+    }
+    console.log('validated 2')
+    return getSurveyResult(slug);
 }

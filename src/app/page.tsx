@@ -89,7 +89,7 @@ export default function Home() {
         if (!validateForm(persons, places)) {
             return;
         }
-        fetch('/api/forms', {
+        fetch('/api/survey', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

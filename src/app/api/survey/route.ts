@@ -1,20 +1,16 @@
 import { NextResponse } from "next/server";
+import {createSurveyRecord} from "@/server/survey/service";
 import { HttpError } from "@/server/http-error";
-import { createFormSubmissionRecord } from "@/server/form-submissions/service";
 
-type RouteContext = {
-  params: Promise<{
-    slug: string;
-  }>;
-};
-
-export async function POST(request: Request, context: RouteContext) {
+export async function POST(request: Request) {
   try {
-    const { slug } = await context.params;
-    const data = createFormSubmissionRecord(slug, await request.json());
+    const body = await request.json();
+    const data = createSurveyRecord(body);
 
     return NextResponse.json(data, { status: 201 });
   } catch (error) {
+    console.error('Error creating form:', error);
+
     if (error instanceof HttpError) {
       return NextResponse.json(
         {

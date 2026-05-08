@@ -80,7 +80,7 @@ export default function Form() {
       setSubmitStatus(null);
       setSubmitError("");
 
-      const response = await fetch(`/api/forms/${slug}`, {
+      const response = await fetch(`/api/survey/${slug}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -13,6 +13,6 @@ interface CreateFormResponse {
 
 export default class FormsClient {
     static async createForm(data: CreateFormRequest): Promise<CreateFormResponse> {
-        return client.post<CreateFormResponse>('/api/forms', data);
+        return client.post<CreateFormResponse>('/api/survey', data);
     }
 }
