@@ -1,7 +1,19 @@
 import styles from "./MobileList.module.css";
 
+interface FormModel {
+  places: {
+    id: string;
+    name: string;
+    people: string[],
+  }[],
+  people: {
+    id: string;
+    name: string;
+  }[],
+}
+
 // Компонент для отображения списка мест и людей на мобильных устройствах
-export default function MobileList({ places, people }) {
+export default function MobileList({ places, people }: FormModel) {
   return (
     <div className={styles.container}>
       {places.map((place) => {

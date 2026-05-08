@@ -1,6 +1,7 @@
 import client from './HttpClient';
 
 interface CreateFormRequest {
+    [key: string]: unknown;
     people: string[];
     places: string[];
 }
