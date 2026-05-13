@@ -28,7 +28,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
         return NextResponse.json(
             {
-                error: "Unexpected server error",
+                error: "Неожиданная ошибка сервера",
             },
             {status: 500},
         );
@@ -38,7 +38,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
 export async function GET(_request: NextRequest, context: RouteContext) {
     try {
         const {slug} = await context.params;
-        console.log('here 1', slug);
         const data = getSurvey(slug);
 
         return NextResponse.json(data, {status: 200});

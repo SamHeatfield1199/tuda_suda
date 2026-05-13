@@ -9,7 +9,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(data, { status: 201 });
   } catch (error) {
-    console.error('Error creating form:', error);
+    console.error('Ошибка получения формы:', error);
 
     if (error instanceof HttpError) {
       return NextResponse.json(
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(
       {
-        error: "Unexpected server error",
+        error: "Неожиданная ошибка сервера",
       },
       { status: 500 },
     );

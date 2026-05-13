@@ -8,6 +8,7 @@ import Toast from "@/components/Toast";
 import {checkDuplicate} from "@/utils/duplicates";
 import InteractiveList from "@/components/InteractiveList/InteractiveList";
 import { MapPickerButton } from "@/components/MapPickerButton";
+import { useRouter } from "next/navigation";
 
 interface ListItem {
     name: string;
@@ -15,6 +16,7 @@ interface ListItem {
 }
 
 export default function Home() {
+    const router = useRouter();
     const [persons, setPersons] = useState<ListItem[]>([]);
     const [places, setPlaces] = useState<ListItem[]>([]);
 
@@ -99,12 +101,16 @@ export default function Home() {
                 places: places.map((place) => place.name),
             }),
         })
-            .then((response) => {
+            .then(async(response) => {
                 if (!response.ok) {
                     Toast.show({type: 'error', message: 'Ошибка при создании формы.'});
                     return;
                 }
                 Toast.show({type: 'success', message: 'Форма успешно создана!'});
+
+                await response.json().then((data) => {
+                    router.push(`/${data.slug}`);
+                });
             })
             .catch(() => {
                 Toast.show({type: 'error', message: 'Произошла ошибка при отправке данных.'});

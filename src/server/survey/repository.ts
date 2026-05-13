@@ -78,19 +78,16 @@ export function createSurvey(input: CreateFormInput): FormRecord {
 }
 
 export function getSurveyResult(slug: string) {
-  console.log('here2')
   const surveyRecord = db.prepare(`
     SELECT *
     FROM forms
     WHERE slug = @slug
   `).get({slug});
 
-  console.log(surveyRecord)
   if (!surveyRecord) {
     throw new Error(`Survey with slug ${slug} not found`);
   }
 
-  console.log('here 3')
   const people = db.prepare(`
     SELECT id, name
     FROM form_people
@@ -104,7 +101,6 @@ export function getSurveyResult(slug: string) {
   `).all({formId: surveyRecord.id});
 
   type Submission = { person_id: string; selected_places: string };
-  console.log('here 4')
 
   /*const submissions: Submission[] = db.prepare(`
     SELECT form_submissions.person_id, form_submissions.selected_places

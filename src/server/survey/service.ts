@@ -72,6 +72,6 @@ export function getSurvey(slug: string) {
     if (!/^[a-zA-Z0-9]{8}$/.test(slug)) {
         throw new HttpError("Invalid slug format. It must be an 8-character alphanumeric hash.", 400);
     }
-    console.log('validated 2')
+
     return getSurveyResult(slug);
 }

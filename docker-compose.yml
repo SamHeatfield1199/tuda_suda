@@ -1,4 +1,3 @@
-version: '3.9'
 services:
   app:
     build: .
@@ -10,7 +9,10 @@ services:
       - ./:/app
       - /app/node_modules
       - ./data:/app/data
+      - /app/.next
     environment:
       NODE_ENV: development
       DATABASE_URL: /app/data/app.db
-    command: npm run dev
+      WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
+    command: npm run dev -- --webpack --hostname 0.0.0.0
