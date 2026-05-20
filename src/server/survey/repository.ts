@@ -4,10 +4,48 @@ import { randomUUID } from "node:crypto";
 import { db } from "@/server/db";
 import type { CreateFormInput, FormPlace, FormPerson, FormRecord } from "@/server/survey/types";
 
+// Тип для строки из таблицы forms
+type SurveyRow = {
+  id:         string;
+  slug:       string;
+  created_at: string;
+};
+
+type SubmissionRow = {
+  person_id:       string | null;
+  selected_places: string;
+};
+
+function parseSelectedPlaceIds(selectedPlaces: string): string[] {
+  try {
+    const parsed = JSON.parse(selectedPlaces) as unknown;
+
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    return parsed
+      .map((place) => {
+        if (!place || typeof place !== "object") {
+          return "";
+        }
+
+        const id = (place as { id?: unknown }).id;
+
+        return typeof id === "string" ? id : "";
+      })
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+// Функция для генерации уникального slug для формы
 function createSlug() {
   return randomUUID().replace(/-/g, "").slice(0, 8);
 }
 
+// Функция для создания новой формы опроса
 export function createSurvey(input: CreateFormInput): FormRecord {
   const now    = new Date().toISOString();
   const formId = randomUUID();
@@ -77,12 +115,13 @@ export function createSurvey(input: CreateFormInput): FormRecord {
   };
 }
 
+// Функция для получения данных формы по slug
 export function getSurveyResult(slug: string) {
   const surveyRecord = db.prepare(`
     SELECT *
     FROM forms
     WHERE slug = @slug
-  `).get({slug});
+  `).get({slug}) as SurveyRow | undefined;
 
   if (!surveyRecord) {
     throw new Error(`Survey with slug ${slug} not found`);
@@ -92,33 +131,43 @@ export function getSurveyResult(slug: string) {
     SELECT id, name
     FROM form_people
     WHERE form_id = @formId
-  `).all({formId: surveyRecord.id});
+  `).all({formId: surveyRecord.id}) as FormPerson[];
 
   const places = db.prepare(`
     SELECT id, name, link
     FROM form_places
     WHERE form_id = @formId
-  `).all({formId: surveyRecord.id});
+  `).all({formId: surveyRecord.id}) as FormPlace[];
 
-  type Submission = { person_id: string; selected_places: string };
-
-  /*const submissions: Submission[] = db.prepare(`
-    SELECT form_submissions.person_id, form_submissions.selected_places
+  const submissions = db.prepare(`
+    SELECT person_id, selected_places
     FROM form_submissions
     WHERE form_slug = @slug
-  `).all({slug});*/
+  `).all({slug}) as SubmissionRow[];
+
+  const peopleByPlaceId = new Map<string, string[]>();
+
+  for (const submission of submissions) {
+    if (!submission.person_id) {
+      continue;
+    }
+
+    for (const placeId of parseSelectedPlaceIds(submission.selected_places)) {
+      const placePeople = peopleByPlaceId.get(placeId) ?? [];
+
+      placePeople.push(submission.person_id);
+      peopleByPlaceId.set(placeId, placePeople);
+    }
+  }
 
   return {
     id: surveyRecord.id,
     slug: surveyRecord.slug,
     createdAt: surveyRecord.created_at,
     people,
-    places: places.map((place: FormPlace) => ({
+    places: places.map((place) => ({
       ...place,
-      /*chosenBy: submissions
-          .filter((submission: Submission) => submission.selected_places === place.id)
-          .map((submission: Submission) => submission.person_id),*/
-      people: [],
+      people: peopleByPlaceId.get(place.id) ?? [],
     })),
   };
 }

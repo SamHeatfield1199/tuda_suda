@@ -34,13 +34,14 @@ function normalizePlaces(items: unknown): SubmittedPlaceInput[] {
     .filter((item): item is SubmittedPlaceInput => item !== null);
 }
 
+// Функция для обработки и валидации данных из запроса на создание новой записи формы
 export function parseCreateFormSubmissionInput(
   slug: string,
   body: unknown,
 ): CreateFormSubmissionInput {
   const normalizedSlug = slug.trim();
-  const userId = normalizePersonId((body as Record<string, unknown> | null)?.userId);
-  const places = normalizePlaces((body as Record<string, unknown> | null)?.places);
+  const userId         = normalizePersonId((body as Record<string, unknown> | null)?.userId);
+  const places         = normalizePlaces((body as Record<string, unknown> | null)?.places);
 
   if (!normalizedSlug) {
     throw new HttpError("Form slug is required", 400);

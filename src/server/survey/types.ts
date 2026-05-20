@@ -19,6 +19,7 @@ export type FormPlace = {
   id: string;
   name: string;
   link: string | null;
+  people?: string[];
 };
 
 export type FormRecord = {

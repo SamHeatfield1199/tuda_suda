@@ -46,6 +46,44 @@ bun install
 bun dev
 ```
 
+## 🐳 Запуск через Docker
+
+Перед запуском убедись, что Docker Desktop запущен.
+
+1. Собрать образ и запустить приложение:
+```bash
+docker compose up --build
+```
+
+После запуска приложение будет доступно на:
+
+```bash
+http://localhost:3000
+```
+
+2. Запустить контейнер в фоне:
+```bash
+docker compose up -d --build
+```
+
+3. Посмотреть логи:
+```bash
+docker compose logs -f app
+```
+
+4. Остановить контейнеры:
+```bash
+docker compose down
+```
+
+5. Пересобрать контейнер, если менялись зависимости или Dockerfile:
+```bash
+docker compose build --no-cache
+docker compose up
+```
+
+В Docker база SQLite хранится в папке `data` проекта и подключается как `/app/data/app.db` внутри контейнера. Если нужно начать с чистой базы, останови контейнеры и удали файл `data/app.db`.
+
 ## Server API
 
 Серверные методы живут прямо внутри проекта на Next.js App Router.

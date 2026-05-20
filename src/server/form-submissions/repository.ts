@@ -7,6 +7,7 @@ import type {
   FormSubmissionRecord,
 } from "@/server/form-submissions/types";
 
+// Функция для создания новой записи формы
 export function createFormSubmission(
   input: CreateFormSubmissionInput,
 ): FormSubmissionRecord {
@@ -19,7 +20,7 @@ export function createFormSubmission(
   `).run({
     id: submissionId,
     slug: input.slug,
-    userId: input.userId,
+    personId: input.userId,
     selectedPlaces: JSON.stringify(input.places),
     createdAt: now,
   });
