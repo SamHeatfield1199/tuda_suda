@@ -4,6 +4,7 @@ interface FormModel {
   places: {
     id: string;
     name: string;
+    link?: string | null;
     people: string[],
   }[],
   people: {
@@ -21,7 +22,15 @@ export default function MobileList({ places, people }: FormModel) {
 
         return (
           <div key={place.id} className={styles.card}>
-            <h3 className={styles.cardTitle}>{place.name}</h3>
+            <h3 className={styles.cardTitle}>
+              {place.link ? (
+                <a href={place.link} target="_blank" rel="noopener noreferrer">
+                  {place.name}
+                </a>
+              ) : (
+                place.name
+              )}
+            </h3>
 
             {goingPeople.length ? (
               <ul className={styles.list}>

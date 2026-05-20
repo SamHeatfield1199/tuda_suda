@@ -11,6 +11,15 @@ interface PickedPlace {
   address?: string;
 }
 
+export type MapPickedPlace = {
+  name: string;
+  link: string;
+};
+
+type MapPickerButtonProps = {
+  onPick: (place: MapPickedPlace) => void;
+};
+
 declare global {
   interface Window {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -19,7 +28,7 @@ declare global {
 }
 
 // Компонент кнопки для выбора места на карте
-export function MapPickerButton() {
+export function MapPickerButton({ onPick }: MapPickerButtonProps) {
   const [open, setOpen]     = useState(false);
   const [picked, setPicked] = useState<PickedPlace | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -108,6 +117,7 @@ export function MapPickerButton() {
   // Открываем модалку и инициализируем карту
   const handleOpen = () => {
     setOpen(true);
+    setPicked(null);
     // Подгружаем скрипт Яндекс Карт если ещё не загружен
     if (!window.ymaps) {
       const script = document.createElement("script");
@@ -128,6 +138,18 @@ export function MapPickerButton() {
     setOpen(false);
   };
 
+  const handleOk = () => {
+    if (!picked) {
+      return;
+    }
+
+    onPick({
+      name: picked.name,
+      link: shareLink,
+    });
+    handleCancel();
+  };
+
   return (
     <>
       <AppButton
@@ -140,8 +162,9 @@ export function MapPickerButton() {
         title="Выберите место"
         open={open}
         onCancel={handleCancel}
-        onOk={() => setOpen(false)}
+        onOk={handleOk}
         width={800}
+        okButtonProps={{ disabled: !picked }}
         okText="Готово"
         cancelText="Отмена"
       >

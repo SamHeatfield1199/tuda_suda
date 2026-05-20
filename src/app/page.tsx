@@ -7,12 +7,13 @@ import React, {useState} from "react";
 import Toast from "@/components/Toast";
 import {checkDuplicate} from "@/utils/duplicates";
 import InteractiveList from "@/components/InteractiveList/InteractiveList";
-import { MapPickerButton } from "@/components/MapPickerButton";
+import { MapPickedPlace, MapPickerButton } from "@/components/MapPickerButton";
 import { useRouter } from "next/navigation";
 
 interface ListItem {
     name: string;
-    id: string
+    id: string;
+    link?: string | null;
 }
 
 export default function Home() {
@@ -65,9 +66,30 @@ export default function Home() {
 
         setPlaces([
             ...places,
-            { id: crypto.randomUUID(), name: newPlace },
+            { id: crypto.randomUUID(), name: newPlace, link: null },
         ]);
         setPlaceName('');
+    }
+
+    function addPlaceFromMap(place: MapPickedPlace) {
+        const name = place.name.trim();
+
+        if (!name) {
+            return;
+        }
+
+        if (checkDuplicate(name, places, 'name')) {
+            setPlaceInputError('РўР°РєРѕРµ РјРµСЃС‚Рѕ СѓР¶Рµ РµСЃС‚СЊ РІ СЃРїРёСЃРєРµ');
+
+            return;
+        }
+
+        setPlaces([
+            ...places,
+            { id: crypto.randomUUID(), name, link: place.link },
+        ]);
+        setPlaceName('');
+        setPlaceInputError('');
     }
 
     function removePlace(id: string) {
@@ -98,7 +120,10 @@ export default function Home() {
             },
             body: JSON.stringify({
                 people: persons.map((person) => person.name),
-                places: places.map((place) => place.name),
+                places: places.map((place) => ({
+                    name: place.name,
+                    link: place.link ?? null,
+                })),
             }),
         })
             .then(async(response) => {
@@ -152,7 +177,7 @@ export default function Home() {
                         onRemove={removePlace}
                         inputError={placeInputError}
                         placeholder="Название"
-                        extraButton={<MapPickerButton />}
+                        extraButton={<MapPickerButton onPick={addPlaceFromMap} />}
                     />
                     <AppButton size="large" title={'Поехали'} color={'grass'} onClick={createForm}></AppButton>
                 </main>

@@ -12,8 +12,16 @@ import { useParams } from "next/navigation";
 // Столбец для названия места
 const placeColumn = {
   title: "",
-  dataIndex: "place",
+  dataIndex: "placeName",
   key: "place",
+  render: (placeName, row) =>
+    row.placeLink ? (
+      <a href={row.placeLink} target="_blank" rel="noopener noreferrer">
+        {placeName}
+      </a>
+    ) : (
+      placeName
+    ),
 };
 
 export default function GoSuda() {
@@ -57,7 +65,8 @@ export default function GoSuda() {
         receivedPlaces.map((place) => {
           const row = {
             key: place.id,
-            place: place.name,
+            placeName: place.name,
+            placeLink: place.link,
           };
 
           receivedPeople.forEach((person) => {
