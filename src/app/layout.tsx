@@ -17,6 +17,7 @@ const appTheme: ThemeConfig = {
   token: {
     green: '#49CC2F',
     purple: '#6813DF',
+    red: '#FF0000',
   },
 };
 

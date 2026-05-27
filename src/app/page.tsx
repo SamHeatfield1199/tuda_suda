@@ -7,8 +7,8 @@ import React, {useState} from "react";
 import Toast from "@/components/Toast";
 import {checkDuplicate} from "@/utils/duplicates";
 import InteractiveList from "@/components/InteractiveList/InteractiveList";
-import { MapPickedPlace, MapPickerButton } from "@/components/MapPickerButton";
-import { useRouter } from "next/navigation";
+import {MapPickedPlace, MapPickerButton} from "@/components/MapPickerButton";
+import {useRouter} from "next/navigation";
 
 interface ListItem {
     name: string;
@@ -18,14 +18,16 @@ interface ListItem {
 
 export default function Home() {
     const router = useRouter();
+
     const [persons, setPersons] = useState<ListItem[]>([]);
-    const [places, setPlaces] = useState<ListItem[]>([]);
+    const [places, setPlaces]   = useState<ListItem[]>([]);
 
     const [personInputName, setPersonName] = useState('');
-    const [placeInputName, setPlaceName] = useState('');
+    const [placeInputName, setPlaceName]   = useState('');
 
     const [personInputError, setPersonInputError] = useState('');
-    const [placeInputError, setPlaceInputError] = useState('');
+    const [placeInputError, setPlaceInputError]   = useState('');
+    const [isSubmitting, setIsSubmitting]         = useState(false);
 
     function addPerson() {
         const name = personInputName.trim();
@@ -42,7 +44,7 @@ export default function Home() {
 
         setPersons([
             ...persons,
-            { id: crypto.randomUUID(), name },
+            {id: crypto.randomUUID(), name},
         ]);
         setPersonName('');
     }
@@ -66,7 +68,7 @@ export default function Home() {
 
         setPlaces([
             ...places,
-            { id: crypto.randomUUID(), name: newPlace, link: null },
+            {id: crypto.randomUUID(), name: newPlace, link: null},
         ]);
         setPlaceName('');
     }
@@ -79,14 +81,14 @@ export default function Home() {
         }
 
         if (checkDuplicate(name, places, 'name')) {
-            setPlaceInputError('РўР°РєРѕРµ РјРµСЃС‚Рѕ СѓР¶Рµ РµСЃС‚СЊ РІ СЃРїРёСЃРєРµ');
+            setPlaceInputError('Такое место уже есть в списке');
 
             return;
         }
 
         setPlaces([
             ...places,
-            { id: crypto.randomUUID(), name, link: place.link },
+            {id: crypto.randomUUID(), name, link: place.link},
         ]);
         setPlaceName('');
         setPlaceInputError('');
@@ -113,6 +115,8 @@ export default function Home() {
         if (!validateForm(persons, places)) {
             return;
         }
+
+        setIsSubmitting(true);
         fetch('/api/survey', {
             method: 'POST',
             headers: {
@@ -126,7 +130,7 @@ export default function Home() {
                 })),
             }),
         })
-            .then(async(response) => {
+            .then(async (response) => {
                 if (!response.ok) {
                     Toast.show({type: 'error', message: 'Ошибка при создании формы.'});
                     return;
@@ -139,6 +143,9 @@ export default function Home() {
             })
             .catch(() => {
                 Toast.show({type: 'error', message: 'Произошла ошибка при отправке данных.'});
+            })
+            .finally(() => {
+                setIsSubmitting(false);
             });
     }
 
@@ -177,9 +184,14 @@ export default function Home() {
                         onRemove={removePlace}
                         inputError={placeInputError}
                         placeholder="Название"
-                        extraButton={<MapPickerButton onPick={addPlaceFromMap} />}
+                        extraButton={<MapPickerButton onPick={addPlaceFromMap}/>}
                     />
-                    <AppButton size="large" title={'Поехали'} color={'grass'} onClick={createForm}></AppButton>
+                    <AppButton
+                        size="large"
+                        title={'Поехали'}
+                        color={'grass'}
+                        disabled={isSubmitting}
+                        onClick={createForm}></AppButton>
                 </main>
             </div>
         </>

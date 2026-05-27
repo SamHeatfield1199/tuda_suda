@@ -7,7 +7,8 @@ import Header from "@/components/Header";
 import MobileList from "@/components/MobileList/MobileList";
 import useIsMobile from "@/hooks/useIsMobile";
 import AppButton from "@/components/Button";
-import { useParams } from "next/navigation";
+import {useParams, useRouter} from "next/navigation";
+import Toast from '../../../components/Toast';
 
 // Столбец для названия места
 const placeColumn = {
@@ -34,6 +35,7 @@ export default function GoSuda() {
   const isMobile = useIsMobile();
 
   const { slug } = useParams();
+  const router = useRouter();
 
   // Функция для загрузки данных опроса
   const loadSurvey = useEffectEvent(async (surveySlug, signal) => {
@@ -42,7 +44,9 @@ export default function GoSuda() {
     try {
       const response = await fetch(`/api/survey/${surveySlug}`, { signal });
       if (!response.ok) {
-        throw new Error(`Ошибка получения данных опроса`);
+        Toast.show({type: 'error', message: 'Опрос не найден.'});
+        router.push('/');
+        // todo: 404
       }
 
       const data = await response.json();
@@ -114,6 +118,22 @@ export default function GoSuda() {
     }
   };
 
+  const handleDelete = async () => {
+    const response = await fetch(`/api/survey/${slug}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      Toast.show({type: 'error', message: 'Не удалось удалить опрос.'});
+      return;
+    }
+    Toast.show({type: 'success', message: 'Опрос удален успешно!'});
+    router.push('/');
+  }
+
   return (
     <Layout style={{ width: "100%", minHeight: "100vh" }}>
       <Header title="Го сюда" />
@@ -143,6 +163,12 @@ export default function GoSuda() {
           title="Отправить любимкам"
           color="lilac"
           onClick={handleCopy}
+        />
+        <AppButton
+          size="large"
+          title="Удалить"
+          color="red"
+          onClick={handleDelete}
         />
 
         {status === "success" && (

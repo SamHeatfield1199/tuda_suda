@@ -56,7 +56,8 @@ function createDatabase() {
       form_slug TEXT NOT NULL,
       person_id TEXT,
       selected_places TEXT NOT NULL,
-      created_at TEXT NOT NULL
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (form_slug) REFERENCES forms(slug) ON DELETE CASCADE
     );
   `);
 

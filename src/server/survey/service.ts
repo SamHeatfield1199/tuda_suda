@@ -1,7 +1,7 @@
 import "server-only";
 
 import { HttpError } from "@/server/http-error";
-import {createSurvey, getSurveyResult} from "@/server/survey/repository";
+import {createSurveyRecord, deleteSurveyRecord, getSurveyResult} from "@/server/survey/repository";
 import type { CreateFormInput, FormPlaceInput } from "@/server/survey/types";
 
 function normalizeList(items: unknown) {
@@ -52,26 +52,38 @@ export function parseCreateSurveyInput(body: unknown): CreateFormInput {
   const people = normalizeList((body as Record<string, unknown> | null)?.people);
 
   if (places.length === 0) {
-    throw new HttpError("At least one place is required", 400);
+    throw new HttpError("Необходимо добавить хотя бы одно место.", 400);
   }
 
   if (people.length === 0) {
-    throw new HttpError("At least one person is required", 400);
+    throw new HttpError("Необходимо добавить хотя бы одного участника.", 400);
   }
 
   return { places, people };
 }
 
-export function createSurveyRecord(body: unknown) {
+export function createSurvey(body: unknown) {
   const input = parseCreateSurveyInput(body);
 
-  return createSurvey(input);
+  return createSurveyRecord(input);
+}
+
+function validateSlug(slug: string) {
+    return /^[a-zA-Z0-9]{8}$/.test(slug);
 }
 
 export function getSurvey(slug: string) {
-    if (!/^[a-zA-Z0-9]{8}$/.test(slug)) {
-        throw new HttpError("Invalid slug format. It must be an 8-character alphanumeric hash.", 400);
+    if (!validateSlug(slug)) {
+        throw new HttpError("Неверные данные.", 400);
     }
 
     return getSurveyResult(slug);
+}
+
+export function deleteSurvey(slug: string): boolean {
+    if (!validateSlug(slug)) {
+        throw new HttpError("Неверные данные.", 400);
+    }
+
+    return deleteSurveyRecord(slug);
 }

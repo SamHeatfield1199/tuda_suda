@@ -46,7 +46,7 @@ function createSlug() {
 }
 
 // Функция для создания новой формы опроса
-export function createSurvey(input: CreateFormInput): FormRecord {
+export function createSurveyRecord(input: CreateFormInput): FormRecord {
   const now    = new Date().toISOString();
   const formId = randomUUID();
   const slug   = createSlug();
@@ -124,7 +124,7 @@ export function getSurveyResult(slug: string) {
   `).get({slug}) as SurveyRow | undefined;
 
   if (!surveyRecord) {
-    throw new Error(`Survey with slug ${slug} not found`);
+    return null;
   }
 
   const people = db.prepare(`
@@ -170,4 +170,13 @@ export function getSurveyResult(slug: string) {
       people: peopleByPlaceId.get(place.id) ?? [],
     })),
   };
+}
+
+export function deleteSurveyRecord(slug: string): boolean {
+  const result = db.prepare(`
+    DELETE FROM forms
+    WHERE slug = @slug
+  `).run({slug});
+
+  return result.changes > 0;
 }

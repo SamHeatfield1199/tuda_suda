@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import {createSurveyRecord} from "@/server/survey/service";
+import {createSurvey} from "@/server/survey/service";
 import { HttpError } from "@/server/http-error";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const data = createSurveyRecord(body);
+    const data = createSurvey(body);
 
     return NextResponse.json(data, { status: 201 });
   } catch (error) {

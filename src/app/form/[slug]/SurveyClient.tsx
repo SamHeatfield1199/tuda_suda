@@ -186,6 +186,7 @@ export default function SurveyClient({ slug, places, people }: SurveyClientProps
         <AppButton
           size="large"
           title={isSubmitting ? "Готовимся к поездке..." : "Поехали!"}
+          disabled={isSubmitting}
           color="grass"
           onClick={handleSubmit}
         />
