@@ -1,23 +1,23 @@
-"use client";
+'use client';
 
-import { useEffect, useEffectEvent, useState } from "react";
-import styles from "./go_suda.module.css";
-import { Alert, Flex, Layout, Table } from "antd";
-import Header from "@/components/Header";
-import MobileList from "@/components/MobileList/MobileList";
-import useIsMobile from "@/hooks/useIsMobile";
-import AppButton from "@/components/Button";
-import {useParams, useRouter} from "next/navigation";
+import { useEffect, useEffectEvent, useState } from 'react';
+import styles from './go_suda.module.css';
+import { Alert, Flex, Layout, Table } from 'antd';
+import Header from '@/components/Header';
+import MobileList from '@/components/MobileList/MobileList';
+import useIsMobile from '@/hooks/useIsMobile';
+import AppButton from '@/components/Button';
+import { useParams, useRouter } from 'next/navigation';
 import Toast from '../../../components/Toast';
 
 // Столбец для названия места
 const placeColumn = {
-  title: "",
-  dataIndex: "placeName",
-  key: "place",
+  title: '',
+  dataIndex: 'placeName',
+  key: 'place',
   render: (placeName, row) =>
     row.placeLink ? (
-      <a href={row.placeLink} target="_blank" rel="noopener noreferrer">
+      <a href={row.placeLink} target='_blank' rel='noopener noreferrer'>
         {placeName}
       </a>
     ) : (
@@ -25,6 +25,7 @@ const placeColumn = {
     ),
 };
 
+// Страница для отображения результатов опроса
 export default function GoSuda() {
   const [status, setStatus] = useState(null); // null | 'success' | 'error'
   const [columns, setColumns] = useState([placeColumn]);
@@ -44,7 +45,7 @@ export default function GoSuda() {
     try {
       const response = await fetch(`/api/survey/${surveySlug}`, { signal });
       if (!response.ok) {
-        Toast.show({type: 'error', message: 'Опрос не найден.'});
+        Toast.show({ type: 'error', message: 'Опрос не найден.' });
         router.push('/');
         // todo: 404
       }
@@ -61,7 +62,7 @@ export default function GoSuda() {
           title: person.name,
           dataIndex: person.id,
           key: person.id,
-          align: "center",
+          align: 'center',
         })),
       ]);
 
@@ -74,15 +75,15 @@ export default function GoSuda() {
           };
 
           receivedPeople.forEach((person) => {
-            row[person.id] = place.people?.includes(person.id) ? "Идёт" : "";
+            row[person.id] = place.people?.includes(person.id) ? 'Идёт' : '';
           });
 
           return row;
         }),
       );
     } catch (error) {
-      if (error.name !== "AbortError") {
-        console.error("Ошибка запроса результатов опроса: ", error);
+      if (error.name !== 'AbortError') {
+        console.error('Ошибка запроса результатов опроса: ', error);
       }
     } finally {
       if (!signal.aborted) {
@@ -106,43 +107,44 @@ export default function GoSuda() {
 
   // Функция для копирования ссылки на опрос
   const handleCopy = async () => {
-    const id = window.location.pathname.replace("/", "");
+    const id = window.location.pathname.replace('/', '');
     const link = `${window.location.origin}/form/${id}`;
 
     try {
       await navigator.clipboard.writeText(link);
-      setStatus("success");
+
+      setStatus('success');
     } catch (err) {
-      console.error("Ошибка копирования", err);
-      setStatus("error");
+      console.error('Ошибка копирования', err);
+      setStatus('error');
     }
   };
 
+  // Функция для удаления опроса
   const handleDelete = async () => {
     const response = await fetch(`/api/survey/${slug}`, {
-      method: "DELETE",
+      method: 'DELETE',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
     });
 
     if (!response.ok) {
-      Toast.show({type: 'error', message: 'Не удалось удалить опрос.'});
+      Toast.show({ type: 'error', message: 'Не удалось удалить опрос.' });
       return;
     }
-    Toast.show({type: 'success', message: 'Опрос удален успешно!'});
+    Toast.show({ type: 'success', message: 'Опрос удален успешно!' });
     router.push('/');
-  }
+  };
 
   return (
-    <Layout style={{ width: "100%", minHeight: "100vh" }}>
-      <Header title="Го сюда" />
-
+    <Layout style={{ width: '100%', minHeight: '100vh' }}>
+      <Header title='Го сюда' />
       <Flex
         className={styles.flexContainer}
-        gap="middle"
-        align="flex-start"
-        justify="center"
+        gap='middle'
+        align='flex-start'
+        justify='center'
         vertical
       >
         {isMobile ? (
@@ -158,33 +160,23 @@ export default function GoSuda() {
           />
         )}
 
-        <AppButton
-          size="large"
-          title="Отправить любимкам"
-          color="lilac"
-          onClick={handleCopy}
-        />
-        <AppButton
-          size="large"
-          title="Удалить"
-          color="red"
-          onClick={handleDelete}
-        />
+        <AppButton size='large' title='Отправить любимкам' color='lilac' onClick={handleCopy} />
+        <AppButton size='large' title='Удалить' color='red' onClick={handleDelete} />
 
-        {status === "success" && (
+        {status === 'success' && (
           <Alert
-            message="Скопировано!"
-            description="Ссылка успешно скопирована в буфер обмена."
-            type="success"
+            title='Скопировано!'
+            description='Ссылка успешно скопирована в буфер обмена.'
+            type='success'
             showIcon
           />
         )}
 
-        {status === "error" && (
+        {status === 'error' && (
           <Alert
-            message="Ошибка"
-            description="Не удалось скопировать ссылку. Попробуйте снова."
-            type="error"
+            title='Ошибка'
+            description='Не удалось скопировать ссылку. Попробуйте снова.'
+            type='error'
             showIcon
           />
         )}

@@ -1,6 +1,6 @@
-import "server-only";
+import 'server-only';
 
-/// A custom error class to represent HTTP errors with status codes and optional details.
+// Класс для представления HTTP-ошибок
 export class HttpError extends Error {
   constructor(
     message: string,
@@ -8,6 +8,6 @@ export class HttpError extends Error {
     public readonly details?: unknown,
   ) {
     super(message);
-    this.name = "HttpError";
+    this.name = 'HttpError';
   }
 }

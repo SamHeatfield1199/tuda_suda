@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 
 // Хук для определения, является ли устройство мобильным
 export default function useIsMobile(breakpoint = 768) {
@@ -10,9 +10,9 @@ export default function useIsMobile(breakpoint = 768) {
     };
 
     check();
-    window.addEventListener("resize", check);
+    window.addEventListener('resize', check);
 
-    return () => window.removeEventListener("resize", check);
+    return () => window.removeEventListener('resize', check);
   }, [breakpoint]);
 
   return isMobile;

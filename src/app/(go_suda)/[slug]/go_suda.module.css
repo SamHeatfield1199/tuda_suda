@@ -1,6 +1,6 @@
 .flexContainer {
   padding-top: 50px;
-  margin:      0 auto;
+  margin: 0 auto;
 }
 
 .button {
@@ -10,5 +10,5 @@
 }
 
 .button:hover {
-  background: #6813DF !important;
+  background: #6813df !important;
 }

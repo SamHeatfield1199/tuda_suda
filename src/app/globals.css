@@ -24,11 +24,9 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
   display: flex;
   flex-direction: column;
   align-items: stretch;
-
   min-height: 100%;
 }
 
@@ -48,11 +46,9 @@ a {
   width: 100%;
   padding: 32px 0;
   margin: 0 auto;
-
   text-align: center;
-
-  background-color: #CCF1C5;
-  color: #6813DF;
+  background-color: #ccf1c5;
+  color: #6813df;
 }
 
 h1 {

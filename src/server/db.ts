@@ -1,11 +1,12 @@
-import "server-only";
+import 'server-only';
 
-import fs from "node:fs";
-import path from "node:path";
-import Database from "better-sqlite3";
+import fs from 'node:fs';
+import path from 'node:path';
+import Database from 'better-sqlite3';
 
-const DEFAULT_DB_PATH = path.join(process.cwd(), "data", "app.db");
+const DEFAULT_DB_PATH = path.join(process.cwd(), 'data', 'app.db');
 
+// Функция для определения пути к базе данных
 function resolveDbPath() {
   const configuredPath = process.env.DATABASE_URL?.trim();
 
@@ -18,6 +19,7 @@ function resolveDbPath() {
     : path.join(process.cwd(), configuredPath);
 }
 
+// Функция для создания и инициализации базы данных
 function createDatabase() {
   const dbPath = resolveDbPath();
 
@@ -25,7 +27,7 @@ function createDatabase() {
 
   const db = new Database(dbPath);
 
-  db.pragma("journal_mode = WAL");
+  db.pragma('journal_mode = WAL');
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS forms (
@@ -61,24 +63,24 @@ function createDatabase() {
     );
   `);
 
-  const formPlacesColumns = db
-    .prepare("PRAGMA table_info(form_places)")
-    .all() as Array<{ name: string }>;
+  const formPlacesColumns = db.prepare('PRAGMA table_info(form_places)').all() as Array<{
+    name: string;
+  }>;
 
-  const hasLinkColumn = formPlacesColumns.some((column) => column.name === "link");
+  const hasLinkColumn = formPlacesColumns.some((column) => column.name === 'link');
 
   if (!hasLinkColumn) {
-    db.exec("ALTER TABLE form_places ADD COLUMN link TEXT");
+    db.exec('ALTER TABLE form_places ADD COLUMN link TEXT');
   }
 
-  const formSubmissionsColumns = db
-    .prepare("PRAGMA table_info(form_submissions)")
-    .all() as Array<{ name: string }>;
+  const formSubmissionsColumns = db.prepare('PRAGMA table_info(form_submissions)').all() as Array<{
+    name: string;
+  }>;
 
-  const hasPersonIdColumn = formSubmissionsColumns.some((column) => column.name === "person_id");
+  const hasPersonIdColumn = formSubmissionsColumns.some((column) => column.name === 'person_id');
 
   if (!hasPersonIdColumn) {
-    db.exec("ALTER TABLE form_submissions ADD COLUMN person_id TEXT");
+    db.exec('ALTER TABLE form_submissions ADD COLUMN person_id TEXT');
   }
 
   return db;
@@ -90,6 +92,6 @@ declare global {
 
 export const db = globalThis.__db__ ?? createDatabase();
 
-if (process.env.NODE_ENV !== "production") {
+if (process.env.NODE_ENV !== 'production') {
   globalThis.__db__ = db;
 }

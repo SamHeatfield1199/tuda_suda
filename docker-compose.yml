@@ -4,7 +4,7 @@ services:
     container_name: tudasuda-app
     working_dir: /app
     ports:
-      - "3000:3000"
+      - '3000:3000'
     volumes:
       - ./:/app
       - /app/node_modules
@@ -13,6 +13,6 @@ services:
     environment:
       NODE_ENV: development
       DATABASE_URL: /app/data/app.db
-      WATCHPACK_POLLING: "true"
-      CHOKIDAR_USEPOLLING: "true"
+      WATCHPACK_POLLING: 'true'
+      CHOKIDAR_USEPOLLING: 'true'
     command: npm run dev -- --webpack --hostname 0.0.0.0

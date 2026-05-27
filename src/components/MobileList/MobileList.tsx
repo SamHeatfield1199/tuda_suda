@@ -1,16 +1,17 @@
-import styles from "./MobileList.module.css";
+import styles from './MobileList.module.css';
 
+// Тип для элемента списка мест и людей
 interface FormModel {
   places: {
     id: string;
     name: string;
     link?: string | null;
-    people: string[],
-  }[],
+    people: string[];
+  }[];
   people: {
     id: string;
     name: string;
-  }[],
+  }[];
 }
 
 // Компонент для отображения списка мест и людей на мобильных устройствах
@@ -24,7 +25,7 @@ export default function MobileList({ places, people }: FormModel) {
           <div key={place.id} className={styles.card}>
             <h3 className={styles.cardTitle}>
               {place.link ? (
-                <a href={place.link} target="_blank" rel="noopener noreferrer">
+                <a href={place.link} target='_blank' rel='noopener noreferrer'>
                   {place.name}
                 </a>
               ) : (

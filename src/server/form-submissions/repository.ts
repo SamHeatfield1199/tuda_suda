@@ -1,23 +1,23 @@
-import "server-only";
+import 'server-only';
 
-import { randomUUID } from "node:crypto";
-import { db } from "@/server/db";
+import { randomUUID } from 'node:crypto';
+import { db } from '@/server/db';
 import type {
   CreateFormSubmissionInput,
   FormSubmissionRecord,
-} from "@/server/form-submissions/types";
+} from '@/server/form-submissions/types';
 
 // Функция для создания новой записи формы
-export function createFormSubmission(
-  input: CreateFormSubmissionInput,
-): FormSubmissionRecord {
+export function createFormSubmission(input: CreateFormSubmissionInput): FormSubmissionRecord {
   const now = new Date().toISOString();
   const submissionId = randomUUID();
 
-  db.prepare(`
+  db.prepare(
+    `
     INSERT INTO form_submissions (id, form_slug, person_id, selected_places, created_at)
     VALUES (@id, @slug, @personId, @selectedPlaces, @createdAt)
-  `).run({
+  `,
+  ).run({
     id: submissionId,
     slug: input.slug,
     personId: input.userId,

@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
-import {createSurvey} from "@/server/survey/service";
-import { HttpError } from "@/server/http-error";
+import { NextResponse } from 'next/server';
+import { createSurvey } from '@/server/survey/service';
+import { HttpError } from '@/server/http-error';
 
 export async function POST(request: Request) {
   try {
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(
       {
-        error: "Неожиданная ошибка сервера",
+        error: 'Неожиданная ошибка сервера',
       },
       { status: 500 },
     );

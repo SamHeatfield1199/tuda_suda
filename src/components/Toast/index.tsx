@@ -18,6 +18,7 @@ interface ToastComponent extends React.FC {
 
 let showToast: (toast: ToastProps) => void;
 
+// Компонент для отображения уведомлений (тостов)
 const Toast: ToastComponent = () => {
   const [toasts, setToasts] = useState<ToastInstance[]>([]);
 

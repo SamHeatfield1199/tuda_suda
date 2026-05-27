@@ -1,21 +1,23 @@
-import "server-only";
+import 'server-only';
 
-import { randomUUID } from "node:crypto";
-import { db } from "@/server/db";
-import type { CreateFormInput, FormPlace, FormPerson, FormRecord } from "@/server/survey/types";
+import { randomUUID } from 'node:crypto';
+import { db } from '@/server/db';
+import type { CreateFormInput, FormPlace, FormPerson, FormRecord } from '@/server/survey/types';
 
 // Тип для строки из таблицы forms
 type SurveyRow = {
-  id:         string;
-  slug:       string;
+  id: string;
+  slug: string;
   created_at: string;
 };
 
+// Тип для строки из таблицы form_submissions
 type SubmissionRow = {
-  person_id:       string | null;
+  person_id: string | null;
   selected_places: string;
 };
 
+// Функция для парсинга строки с выбранными местами
 function parseSelectedPlaceIds(selectedPlaces: string): string[] {
   try {
     const parsed = JSON.parse(selectedPlaces) as unknown;
@@ -26,13 +28,13 @@ function parseSelectedPlaceIds(selectedPlaces: string): string[] {
 
     return parsed
       .map((place) => {
-        if (!place || typeof place !== "object") {
-          return "";
+        if (!place || typeof place !== 'object') {
+          return '';
         }
 
         const id = (place as { id?: unknown }).id;
 
-        return typeof id === "string" ? id : "";
+        return typeof id === 'string' ? id : '';
       })
       .filter(Boolean);
   } catch {
@@ -42,14 +44,14 @@ function parseSelectedPlaceIds(selectedPlaces: string): string[] {
 
 // Функция для генерации уникального slug для формы
 function createSlug() {
-  return randomUUID().replace(/-/g, "").slice(0, 8);
+  return randomUUID().replace(/-/g, '').slice(0, 8);
 }
 
 // Функция для создания новой формы опроса
 export function createSurveyRecord(input: CreateFormInput): FormRecord {
-  const now    = new Date().toISOString();
+  const now = new Date().toISOString();
   const formId = randomUUID();
-  const slug   = createSlug();
+  const slug = createSlug();
 
   const people: FormPerson[] = input.people.map((name) => ({
     id: randomUUID(),
@@ -117,33 +119,49 @@ export function createSurveyRecord(input: CreateFormInput): FormRecord {
 
 // Функция для получения данных формы по slug
 export function getSurveyResult(slug: string) {
-  const surveyRecord = db.prepare(`
+  const surveyRecord = db
+    .prepare(
+      `
     SELECT *
     FROM forms
     WHERE slug = @slug
-  `).get({slug}) as SurveyRow | undefined;
+  `,
+    )
+    .get({ slug }) as SurveyRow | undefined;
 
   if (!surveyRecord) {
     return null;
   }
 
-  const people = db.prepare(`
+  const people = db
+    .prepare(
+      `
     SELECT id, name
     FROM form_people
     WHERE form_id = @formId
-  `).all({formId: surveyRecord.id}) as FormPerson[];
+  `,
+    )
+    .all({ formId: surveyRecord.id }) as FormPerson[];
 
-  const places = db.prepare(`
+  const places = db
+    .prepare(
+      `
     SELECT id, name, link
     FROM form_places
     WHERE form_id = @formId
-  `).all({formId: surveyRecord.id}) as FormPlace[];
+  `,
+    )
+    .all({ formId: surveyRecord.id }) as FormPlace[];
 
-  const submissions = db.prepare(`
+  const submissions = db
+    .prepare(
+      `
     SELECT person_id, selected_places
     FROM form_submissions
     WHERE form_slug = @slug
-  `).all({slug}) as SubmissionRow[];
+  `,
+    )
+    .all({ slug }) as SubmissionRow[];
 
   const peopleByPlaceId = new Map<string, string[]>();
 
@@ -172,11 +190,16 @@ export function getSurveyResult(slug: string) {
   };
 }
 
+// Функция для удаления формы по slug
 export function deleteSurveyRecord(slug: string): boolean {
-  const result = db.prepare(`
+  const result = db
+    .prepare(
+      `
     DELETE FROM forms
     WHERE slug = @slug
-  `).run({slug});
+  `,
+    )
+    .run({ slug });
 
   return result.changes > 0;
 }

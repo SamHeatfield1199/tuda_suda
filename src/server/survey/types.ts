@@ -1,4 +1,4 @@
-import "server-only";
+import 'server-only';
 
 export type CreateFormInput = {
   places: FormPlaceInput[];
