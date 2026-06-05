@@ -1,17 +1,17 @@
+import { notFound } from 'next/navigation';
 import { HttpError } from '@/server/http-error';
 import { getSurvey } from '@/server/survey/service';
-import SurveyClient from './SurveyClient';
 import type { FormRecord } from '@/server/survey/types';
-import { notFound } from 'next/navigation';
+import ResultsClient from './ResultsClient';
 
-type SurveyPageProps = {
+type ResultsPageProps = {
   params: Promise<{
     slug: string;
   }>;
 };
 
-// Страница для отображения формы опроса
-export default async function SurveyPage({ params }: SurveyPageProps) {
+// Страница для отображения результатов опроса
+export default async function ResultsPage({ params }: ResultsPageProps) {
   const { slug } = await params;
   let survey: FormRecord | null = null;
 
@@ -29,5 +29,5 @@ export default async function SurveyPage({ params }: SurveyPageProps) {
     notFound();
   }
 
-  return <SurveyClient slug={survey.slug} places={survey.places} people={survey.people} />;
+  return <ResultsClient slug={survey.slug} places={survey.places} people={survey.people} />;
 }
