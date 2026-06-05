@@ -10,7 +10,7 @@ export type SubmittedPlaceInput = {
 export type CreateFormSubmissionInput = {
   slug: string;
   userId: string;
-  places: SubmittedPlaceInput[];
+  places: string[];
 };
 
 // Запись формы, сохраненная в базе данных
@@ -18,6 +18,6 @@ export type FormSubmissionRecord = {
   id: string;
   slug: string;
   userId: string;
-  places: SubmittedPlaceInput[];
+  places: string[];
   createdAt: string;
 };

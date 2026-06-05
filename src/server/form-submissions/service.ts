@@ -6,65 +6,30 @@ import type {
   CreateFormSubmissionInput,
   SubmittedPlaceInput,
 } from '@/server/form-submissions/types';
-
-// Функция для нормализации идентификатора пользователя
-function normalizePersonId(value: unknown): string {
-  return typeof value === 'string' ? value.trim() : '';
-}
-
-// Функция для нормализации и валидации данных
-function normalizePlaces(items: unknown): SubmittedPlaceInput[] {
-  if (!Array.isArray(items)) {
-    return [];
-  }
-
-  return items
-    .map((item): SubmittedPlaceInput | null => {
-      if (!item || typeof item !== 'object') {
-        return null;
-      }
-
-      const id = typeof item.id === 'string' ? item.id.trim() : '';
-      const name = typeof item.name === 'string' ? item.name.trim() : '';
-
-      if (!id || !name) {
-        return null;
-      }
-
-      return { id, name };
-    })
-    .filter((item): item is SubmittedPlaceInput => item !== null);
-}
+import { validateSlug } from '@/utils/validators';
+import { SurveySubmissionSchema } from '@/app/schemas/survey-submission-schema';
 
 // Функция для обработки и валидации данных из запроса на создание новой записи формы
 export function parseCreateFormSubmissionInput(
   slug: string,
-  body: unknown,
+  body: Record<string, unknown>,
 ): CreateFormSubmissionInput {
-  const normalizedSlug = slug.trim();
-  const userId = normalizePersonId((body as Record<string, unknown> | null)?.userId);
-  const places = normalizePlaces((body as Record<string, unknown> | null)?.places);
-
-  if (!normalizedSlug) {
-    throw new HttpError('Необходимо указать slug формы', 400);
+  if (!validateSlug(slug)) {
+    throw new HttpError('Неверные данные.', 400);
   }
 
-  if (!userId) {
-    throw new HttpError('Идентификатор пользователя обязателен', 400);
-  }
-
-  if (places.length === 0) {
-    throw new HttpError('Необходимо выбрать хотя бы одно место', 400);
-  }
+  const parsed = SurveySubmissionSchema.parse(body);
+  const userId = parsed.userId;
+  const places = parsed.places;
 
   return {
-    slug: normalizedSlug,
+    slug,
     userId,
     places,
   };
 }
 
-export function createFormSubmissionRecord(slug: string, body: unknown) {
+export function createFormSubmissionRecord(slug: string, body: Record<string, unknown>) {
   const input = parseCreateFormSubmissionInput(slug, body);
 
   return createFormSubmission(input);

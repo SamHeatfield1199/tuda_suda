@@ -26,17 +26,7 @@ function parseSelectedPlaceIds(selectedPlaces: string): string[] {
       return [];
     }
 
-    return parsed
-      .map((place) => {
-        if (!place || typeof place !== 'object') {
-          return '';
-        }
-
-        const id = (place as { id?: unknown }).id;
-
-        return typeof id === 'string' ? id : '';
-      })
-      .filter(Boolean);
+    return parsed.filter(Boolean);
   } catch {
     return [];
   }

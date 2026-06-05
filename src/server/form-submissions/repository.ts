@@ -12,18 +12,20 @@ export function createFormSubmission(input: CreateFormSubmissionInput): FormSubm
   const now = new Date().toISOString();
   const submissionId = randomUUID();
 
-  db.prepare(
-    `
+  const result = db
+    .prepare(
+      `
     INSERT INTO form_submissions (id, form_slug, person_id, selected_places, created_at)
     VALUES (@id, @slug, @personId, @selectedPlaces, @createdAt)
   `,
-  ).run({
-    id: submissionId,
-    slug: input.slug,
-    personId: input.userId,
-    selectedPlaces: JSON.stringify(input.places),
-    createdAt: now,
-  });
+    )
+    .run({
+      id: submissionId,
+      slug: input.slug,
+      personId: input.userId,
+      selectedPlaces: JSON.stringify(input.places),
+      createdAt: now,
+    });
 
   return {
     id: submissionId,

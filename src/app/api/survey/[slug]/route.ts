@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { HttpError } from '@/server/http-error';
 import { createFormSubmissionRecord } from '@/server/form-submissions/service';
 import { deleteSurvey, getSurvey } from '@/server/survey/service';
+import { z } from 'zod';
 
 // Контекст маршрута для получения параметров из URL
 type RouteContext = {
@@ -18,6 +19,15 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     return NextResponse.json(data, { status: 201 });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          error: error.issues[0]?.message ?? 'Неверные входные данные',
+        },
+        { status: 400 },
+      );
+    }
+
     if (error instanceof HttpError) {
       return NextResponse.json(
         {

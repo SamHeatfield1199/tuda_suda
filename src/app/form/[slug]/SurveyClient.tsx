@@ -42,12 +42,7 @@ export default function SurveyClient({ slug, places, people }: SurveyClientProps
   // Функция для обработки отправки формы
   const handleSubmit = async () => {
     // Получаем список выбранных мест
-    const selectedPlaces = places
-      .filter((place) => checked[place.id])
-      .map((place) => ({
-        id: place.id,
-        name: place.name,
-      }));
+    const selectedPlaces = places.filter((place) => checked[place.id]).map((place) => place.id);
 
     if (selectedPlaces.length === 0) {
       setSubmitStatus('error');
