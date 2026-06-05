@@ -1,3 +1,5 @@
+'use client';
+
 import { useRef, useState } from 'react';
 import { Button, Modal, Input, Space } from 'antd';
 import { CopyOutlined } from '@ant-design/icons';
@@ -41,14 +43,57 @@ export function MapPickerButton({ onPick }: MapPickerButtonProps) {
       return `https://yandex.ru/maps/org/${place.orgId}/`;
     }
 
-    const [lon, lat] = place.coords;
-    const lonR = lon.toFixed(5);
-    const latR = lat.toFixed(5);
+    const [lat, lon] = place.coords;
 
-    return `https://yandex.ru/maps/?pt=${lonR},${latR}&z=16`;
+    return `https://yandex.ru/maps/?pt=${lon.toFixed(5)},${lat.toFixed(5)}&z=16`;
   }
 
-  // Инициализация карты и установка обработчиков
+  // Функция для извлечения метаданных компании из геообъекта Яндекс.Карт
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function getCompanyMetaData(geoObject: any) {
+    const metaData = geoObject?.properties.get('metaDataProperty');
+
+    return (
+      geoObject?.properties.get('CompanyMetaData') ??
+      metaData?.CompanyMetaData ??
+      metaData?.get?.('CompanyMetaData') ??
+      null
+    );
+  }
+
+  // Функция для обработки выбора геообъекта на карте
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function pickGeoObject(geoObject: any, coords: [number, number]) {
+    const companyMeta = getCompanyMetaData(geoObject);
+    const address =
+      geoObject?.getAddressLine?.() ??
+      geoObject?.properties.get('description') ??
+      geoObject?.properties.get('text') ??
+      '';
+    const name = companyMeta?.name ?? geoObject?.properties.get('name') ?? address;
+
+    if (!name) {
+      return;
+    }
+
+    setPicked({
+      name,
+      coords,
+      orgId: companyMeta?.id ?? undefined,
+      address,
+    });
+  }
+
+  // Функция для получения информации о месте по координатам
+  function pickByCoords(coords: [number, number]) {
+    window.ymaps
+      .geocode(coords, { kind: 'house', results: 1 })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .then((res: any) => {
+        pickGeoObject(res.geoObjects.get(0), coords);
+      });
+  }
+
   const initMap = () => {
     window.ymaps.ready(() => {
       // Если карта уже была — уничтожаем
@@ -57,83 +102,67 @@ export function MapPickerButton({ onPick }: MapPickerButtonProps) {
         mapRef.current = null;
       }
 
-      const map = new window.ymaps.Map('ymap-container', {
-        center: [55.7558, 37.6173],
-        zoom: 12,
-        controls: ['searchControl', 'geolocationControl', 'zoomControl'],
-      });
+      const map = new window.ymaps.Map(
+        'ymap-container',
+        {
+          center: [55.7558, 37.6173],
+          zoom: 12,
+          controls: ['searchControl', 'geolocationControl', 'zoomControl'],
+        },
+        {
+          searchControlProvider: 'yandex#search',
+          yandexMapDisablePoiInteractivity: true,
+        },
+      );
 
       mapRef.current = map;
 
       const searchControl = map.controls.get('searchControl');
       searchControl.options.set({ provider: 'yandex#search' });
 
-      // Обработчик кликов по карте
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      map.events.add('click', (e: any) => {
-        const coords = e.get('coords') as [number, number];
-        const [lat, lon] = coords;
-
-        window.ymaps
-          .geocode(coords, { kind: 'house', results: 1 })
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .then((res: any) => {
-            const firstGeo = res.geoObjects.get(0);
-            const address = firstGeo?.getAddressLine() ?? '';
-            const meta = firstGeo?.properties.get('CompanyMetaData');
-            const orgId = meta?.id ?? undefined;
-            const name = meta?.name ?? address;
-
-            setPicked({ name, coords: [lon, lat], orgId, address });
-          });
+      map.events.add('click', (event: unknown) => {
+        const coords = (event as { get: (key: string) => [number, number] }).get('coords');
+        pickByCoords(coords);
       });
 
-      // Обработчик выбора результата в поиске
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      searchControl.events.add('resultselect', (e: any) => {
-        const index = e.get('index');
-        const results = searchControl.getResultsArray();
-        const result = results[index];
+      searchControl.events.add('resultselect', (event: unknown) => {
+        const index = (event as { get: (key: string) => number }).get('index');
+        const result = searchControl.getResultsArray()[index];
 
-        if (!result) return;
+        if (!result) {
+          return;
+        }
 
-        const coords = result.geometry.getCoordinates() as [number, number];
-        const [lat, lon] = coords;
-        const orgId = result.properties.get('id') ?? undefined;
-        const name = result.properties.get('name') ?? result.properties.get('text') ?? '';
-        const address = result.properties.get('description') ?? '';
-
-        setPicked({
-          name,
-          coords: [lon, lat],
-          orgId,
-          address,
-        });
+        pickGeoObject(result, result.geometry.getCoordinates() as [number, number]);
       });
     });
   };
-
-  // Открываем модалку и инициализируем карту
-  const handleOpen = () => {
-    setOpen(true);
-    setPicked(null);
-    // Подгружаем скрипт Яндекс Карт если ещё не загружен
+  // Функция для загрузки API Яндекс.Карт и инициализации карты
+  const loadMap = () => {
     if (!window.ymaps) {
       const script = document.createElement('script');
       script.src = `https://api-maps.yandex.ru/2.1/?apikey=${process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY}&lang=ru_RU`;
       script.onload = initMap;
       document.head.appendChild(script);
-    } else {
-      initMap();
+      return;
     }
+
+    initMap();
   };
 
-  // Закрываем модалку и уничтожаем карту
+  // Функция для открытия модального окна с картой
+  const handleOpen = () => {
+    setOpen(true);
+    setPicked(null);
+    setTimeout(loadMap, 0);
+  };
+
   const handleCancel = () => {
     if (mapRef.current) {
       mapRef.current.destroy();
       mapRef.current = null;
     }
+
     setOpen(false);
   };
 
@@ -152,7 +181,7 @@ export function MapPickerButton({ onPick }: MapPickerButtonProps) {
 
   return (
     <>
-      <AppButton title='Выбрать на карте' color={'lilac'} onClick={handleOpen} />
+      <AppButton title='Выбрать на карте' color='lilac' onClick={handleOpen} />
 
       <Modal
         title='Выберите место'
