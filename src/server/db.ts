@@ -2,96 +2,132 @@ import 'server-only';
 
 import fs from 'node:fs';
 import path from 'node:path';
-import Database from 'better-sqlite3';
+import { createClient, type Client, type Row } from '@libsql/client';
 
 const DEFAULT_DB_PATH = path.join(process.cwd(), 'data', 'app.db');
 
-// Функция для определения пути к базе данных
-function resolveDbPath() {
-  const configuredPath = process.env.DATABASE_URL?.trim();
+const SCHEMA_SQL = `
+  CREATE TABLE IF NOT EXISTS forms (
+    id TEXT PRIMARY KEY,
+    slug TEXT NOT NULL UNIQUE,
+    created_at TEXT NOT NULL
+  );
 
-  if (!configuredPath) {
-    return DEFAULT_DB_PATH;
-  }
+  CREATE TABLE IF NOT EXISTS form_people (
+    id TEXT PRIMARY KEY,
+    form_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (form_id) REFERENCES forms(id) ON DELETE CASCADE
+  );
 
-  return path.isAbsolute(configuredPath)
-    ? configuredPath
-    : path.join(process.cwd(), configuredPath);
+  CREATE TABLE IF NOT EXISTS form_places (
+    id TEXT PRIMARY KEY,
+    form_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    link TEXT,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (form_id) REFERENCES forms(id) ON DELETE CASCADE
+  );
+
+  CREATE TABLE IF NOT EXISTS form_submissions (
+    id TEXT PRIMARY KEY,
+    form_slug TEXT NOT NULL,
+    person_id TEXT,
+    selected_places TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (form_slug) REFERENCES forms(slug) ON DELETE CASCADE
+  );
+`;
+
+type DbConfig = {
+  url: string;
+  authToken?: string;
+};
+
+function isRemoteDatabaseUrl(url: string) {
+  return url.startsWith('libsql:') || url.startsWith('https:') || url.startsWith('http:');
 }
 
-// Функция для создания и инициализации базы данных
-function createDatabase() {
-  const dbPath = resolveDbPath();
+function resolveFileUrl(configuredPath?: string) {
+  const dbPath = !configuredPath
+    ? DEFAULT_DB_PATH
+    : path.isAbsolute(configuredPath)
+      ? configuredPath
+      : path.join(process.cwd(), configuredPath);
 
   fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 
-  const db = new Database(dbPath);
+  return `file:${dbPath.replace(/\\/g, '/')}`;
+}
 
-  db.pragma('journal_mode = WAL');
+function resolveDbConfig(): DbConfig {
+  const tursoUrl = process.env.TURSO_DATABASE_URL?.trim();
+  const authToken = process.env.TURSO_AUTH_TOKEN?.trim() || undefined;
+  const databaseUrl = process.env.DATABASE_URL?.trim();
 
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS forms (
-      id TEXT PRIMARY KEY,
-      slug TEXT NOT NULL UNIQUE,
-      created_at TEXT NOT NULL
-    );
-
-    CREATE TABLE IF NOT EXISTS form_people (
-      id TEXT PRIMARY KEY,
-      form_id TEXT NOT NULL,
-      name TEXT NOT NULL,
-      created_at TEXT NOT NULL,
-      FOREIGN KEY (form_id) REFERENCES forms(id) ON DELETE CASCADE
-    );
-
-    CREATE TABLE IF NOT EXISTS form_places (
-      id TEXT PRIMARY KEY,
-      form_id TEXT NOT NULL,
-      name TEXT NOT NULL,
-      link TEXT,
-      created_at TEXT NOT NULL,
-      FOREIGN KEY (form_id) REFERENCES forms(id) ON DELETE CASCADE
-    );
-
-    CREATE TABLE IF NOT EXISTS form_submissions (
-      id TEXT PRIMARY KEY,
-      form_slug TEXT NOT NULL,
-      person_id TEXT,
-      selected_places TEXT NOT NULL,
-      created_at TEXT NOT NULL,
-      FOREIGN KEY (form_slug) REFERENCES forms(slug) ON DELETE CASCADE
-    );
-  `);
-
-  const formPlacesColumns = db.prepare('PRAGMA table_info(form_places)').all() as Array<{
-    name: string;
-  }>;
-
-  const hasLinkColumn = formPlacesColumns.some((column) => column.name === 'link');
-
-  if (!hasLinkColumn) {
-    db.exec('ALTER TABLE form_places ADD COLUMN link TEXT');
+  if (tursoUrl) {
+    return { url: tursoUrl, authToken };
   }
 
-  const formSubmissionsColumns = db.prepare('PRAGMA table_info(form_submissions)').all() as Array<{
-    name: string;
-  }>;
-
-  const hasPersonIdColumn = formSubmissionsColumns.some((column) => column.name === 'person_id');
-
-  if (!hasPersonIdColumn) {
-    db.exec('ALTER TABLE form_submissions ADD COLUMN person_id TEXT');
+  if (databaseUrl && isRemoteDatabaseUrl(databaseUrl)) {
+    return { url: databaseUrl, authToken };
   }
 
-  return db;
+  if (process.env.VERCEL) {
+    throw new Error(
+      'На Vercel нужна удалённая база. Задайте TURSO_DATABASE_URL и TURSO_AUTH_TOKEN.',
+    );
+  }
+
+  return { url: resolveFileUrl(databaseUrl) };
+}
+
+function createDatabaseClient() {
+  return createClient(resolveDbConfig());
+}
+
+function hasColumn(rows: Row[], columnName: string) {
+  return rows.some((row) => String(row.name ?? row[1]) === columnName);
+}
+
+async function initializeSchema(client: Client) {
+  if (client.protocol === 'file') {
+    await client.execute('PRAGMA foreign_keys = ON');
+  }
+
+  await client.executeMultiple(SCHEMA_SQL);
+
+  const formPlaces = await client.execute('PRAGMA table_info(form_places)');
+  if (!hasColumn(formPlaces.rows, 'link')) {
+    await client.execute('ALTER TABLE form_places ADD COLUMN link TEXT');
+  }
+
+  const formSubmissions = await client.execute('PRAGMA table_info(form_submissions)');
+  if (!hasColumn(formSubmissions.rows, 'person_id')) {
+    await client.execute('ALTER TABLE form_submissions ADD COLUMN person_id TEXT');
+  }
 }
 
 declare global {
-  var __db__: Database.Database | undefined;
+  var __libsqlClient__: Client | undefined;
+  var __libsqlReady__: Promise<Client> | undefined;
 }
 
-export const db = globalThis.__db__ ?? createDatabase();
+export function getDb(): Promise<Client> {
+  if (!globalThis.__libsqlReady__) {
+    globalThis.__libsqlReady__ = (async () => {
+      const client = globalThis.__libsqlClient__ ?? createDatabaseClient();
 
-if (process.env.NODE_ENV !== 'production') {
-  globalThis.__db__ = db;
+      if (process.env.NODE_ENV !== 'production') {
+        globalThis.__libsqlClient__ = client;
+      }
+
+      await initializeSchema(client);
+
+      return client;
+    })();
+  }
+
+  return globalThis.__libsqlReady__;
 }

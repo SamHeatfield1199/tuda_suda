@@ -29,7 +29,7 @@ export function parseCreateFormSubmissionInput(
   };
 }
 
-export function createFormSubmissionRecord(slug: string, body: Record<string, unknown>) {
+export async function createFormSubmissionRecord(slug: string, body: Record<string, unknown>) {
   const input = parseCreateFormSubmissionInput(slug, body);
 
   return createFormSubmission(input);

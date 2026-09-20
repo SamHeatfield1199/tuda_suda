@@ -38,14 +38,14 @@ export function parseCreateSurveyInput(body: Record<string, unknown>): CreateFor
 }
 
 // Функция для создания нового опроса
-export function createSurvey(body: Record<string, unknown>) {
+export async function createSurvey(body: Record<string, unknown>) {
   const input = parseCreateSurveyInput(body);
 
   return createSurveyRecord(input);
 }
 
 // Функция для получения данных опроса по slug
-export function getSurvey(slug: string) {
+export async function getSurvey(slug: string) {
   if (!validateSlug(slug)) {
     throw new HttpError('Неверные данные.', 400);
   }
@@ -54,7 +54,7 @@ export function getSurvey(slug: string) {
 }
 
 // Функция для удаления опроса по slug
-export function deleteSurvey(slug: string): boolean {
+export async function deleteSurvey(slug: string): Promise<boolean> {
   if (!validateSlug(slug)) {
     throw new HttpError('Неверные данные.', 400);
   }

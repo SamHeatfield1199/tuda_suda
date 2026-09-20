@@ -102,8 +102,8 @@ docker compose up
 Серверные методы живут прямо внутри проекта на Next.js App Router.
 
 - `src/app/api/survey/route.ts` - HTTP endpoint
-- `src/server/forms/service.ts` - валидация и серверная бизнес-логика
-- `src/server/forms/repository.ts` - запись формы в SQLite
+- `src/server/survey/service.ts` - валидация и серверная бизнес-логика
+- `src/server/survey/repository.ts` - запись формы в базу
 - `src/server/db.ts` - подключение к базе и инициализация таблиц
 
 Схема работы:
@@ -111,13 +111,16 @@ docker compose up
 1. Клиент отправляет запрос на `/api/survey`
 2. Route handler принимает JSON
 3. Service валидирует входные данные
-4. Repository хранит методы работы с SQLite
+4. Repository хранит методы работы с базой
 
 Переменные окружения:
 
 ```bash
 DATABASE_URL=./data/app.db
+NEXT_PUBLIC_YANDEX_MAPS_API_KEY=your_yandex_maps_api_key
 ```
+
+Для продакшена на Vercel используются `TURSO_DATABASE_URL` и `TURSO_AUTH_TOKEN`. Локально по-прежнему работает файл SQLite через `DATABASE_URL`.
 
 Пример запроса:
 

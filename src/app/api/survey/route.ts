@@ -5,7 +5,7 @@ import { HttpError } from '@/server/http-error';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const data = createSurvey(body);
+    const data = await createSurvey(body);
 
     return NextResponse.json(data, { status: 201 });
   } catch (error) {

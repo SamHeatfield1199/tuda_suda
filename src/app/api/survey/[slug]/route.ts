@@ -15,7 +15,7 @@ type RouteContext = {
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
     const { slug } = await context.params;
-    const data = createFormSubmissionRecord(slug, await request.json());
+    const data = await createFormSubmissionRecord(slug, await request.json());
 
     return NextResponse.json(data, { status: 201 });
   } catch (error) {
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 export async function GET(_request: NextRequest, context: RouteContext) {
   try {
     const { slug } = await context.params;
-    const data = getSurvey(slug);
+    const data = await getSurvey(slug);
 
     if (!data) {
       throw new HttpError('Опрос не найден', 404);
@@ -82,7 +82,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 export async function DELETE(_request: NextRequest, context: RouteContext) {
   try {
     const { slug } = await context.params;
-    const isDeleted = deleteSurvey(slug);
+    const isDeleted = await deleteSurvey(slug);
 
     if (!isDeleted) {
       throw new HttpError('Не удалось удалить опрос', 500);

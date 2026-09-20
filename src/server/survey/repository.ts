@@ -1,7 +1,7 @@
 import 'server-only';
 
 import { randomUUID } from 'node:crypto';
-import { db } from '@/server/db';
+import { getDb } from '@/server/db';
 import type { CreateFormInput, FormPlace, FormPerson, FormRecord } from '@/server/survey/types';
 
 // Тип для строки из таблицы forms
@@ -37,8 +37,9 @@ function createSlug() {
   return randomUUID().replace(/-/g, '').slice(0, 8);
 }
 
-// Функция для создания новой формы опроса
-export function createSurveyRecord(input: CreateFormInput): FormRecord {
+// Функция для создания записи о форме
+export async function createSurveyRecord(input: CreateFormInput): Promise<FormRecord> {
+  const db = await getDb();
   const now = new Date().toISOString();
   const formId = randomUUID();
   const slug = createSlug();
@@ -54,49 +55,47 @@ export function createSurveyRecord(input: CreateFormInput): FormRecord {
     link: place.link,
   }));
 
-  const insertForm = db.prepare(`
-    INSERT INTO forms (id, slug, created_at)
-    VALUES (@id, @slug, @createdAt)
-  `);
-
-  const insertPerson = db.prepare(`
-    INSERT INTO form_people (id, form_id, name, created_at)
-    VALUES (@id, @formId, @name, @createdAt)
-  `);
-
-  const insertPlace = db.prepare(`
-    INSERT INTO form_places (id, form_id, name, link, created_at)
-    VALUES (@id, @formId, @name, @link, @createdAt)
-  `);
-
-  const transaction = db.transaction(() => {
-    insertForm.run({
-      id: formId,
-      slug,
-      createdAt: now,
-    });
-
-    for (const person of people) {
-      insertPerson.run({
-        id: person.id,
-        formId,
-        name: person.name,
-        createdAt: now,
-      });
-    }
-
-    for (const place of places) {
-      insertPlace.run({
-        id: place.id,
-        formId,
-        name: place.name,
-        link: place.link,
-        createdAt: now,
-      });
-    }
-  });
-
-  transaction();
+  await db.batch(
+    [
+      {
+        sql: `
+          INSERT INTO forms (id, slug, created_at)
+          VALUES (:id, :slug, :createdAt)
+        `,
+        args: {
+          id: formId,
+          slug,
+          createdAt: now,
+        },
+      },
+      ...people.map((person) => ({
+        sql: `
+          INSERT INTO form_people (id, form_id, name, created_at)
+          VALUES (:id, :formId, :name, :createdAt)
+        `,
+        args: {
+          id: person.id,
+          formId,
+          name: person.name,
+          createdAt: now,
+        },
+      })),
+      ...places.map((place) => ({
+        sql: `
+          INSERT INTO form_places (id, form_id, name, link, created_at)
+          VALUES (:id, :formId, :name, :link, :createdAt)
+        `,
+        args: {
+          id: place.id,
+          formId,
+          name: place.name,
+          link: place.link,
+          createdAt: now,
+        },
+      })),
+    ],
+    'write',
+  );
 
   return {
     id: formId,
@@ -107,52 +106,53 @@ export function createSurveyRecord(input: CreateFormInput): FormRecord {
   };
 }
 
-// Функция для получения данных формы по slug
-export function getSurveyResult(slug: string) {
-  const surveyRecord = db
-    .prepare(
-      `
-    SELECT *
-    FROM forms
-    WHERE slug = @slug
-  `,
-    )
-    .get({ slug }) as SurveyRow | undefined;
+export async function getSurveyResult(slug: string) {
+  const db = await getDb();
+  const surveyResult = await db.execute({
+    sql: `
+      SELECT *
+      FROM forms
+      WHERE slug = :slug
+    `,
+    args: { slug },
+  });
+
+  const surveyRecord = surveyResult.rows[0] as unknown as SurveyRow | undefined;
 
   if (!surveyRecord) {
     return null;
   }
 
-  const people = db
-    .prepare(
-      `
-    SELECT id, name
-    FROM form_people
-    WHERE form_id = @formId
-  `,
-    )
-    .all({ formId: surveyRecord.id }) as FormPerson[];
+  const [peopleResult, placesResult, submissionsResult] = await Promise.all([
+    db.execute({
+      sql: `
+        SELECT id, name
+        FROM form_people
+        WHERE form_id = :formId
+      `,
+      args: { formId: surveyRecord.id },
+    }),
+    db.execute({
+      sql: `
+        SELECT id, name, link
+        FROM form_places
+        WHERE form_id = :formId
+      `,
+      args: { formId: surveyRecord.id },
+    }),
+    db.execute({
+      sql: `
+        SELECT person_id, selected_places
+        FROM form_submissions
+        WHERE form_slug = :slug
+      `,
+      args: { slug },
+    }),
+  ]);
 
-  const places = db
-    .prepare(
-      `
-    SELECT id, name, link
-    FROM form_places
-    WHERE form_id = @formId
-  `,
-    )
-    .all({ formId: surveyRecord.id }) as FormPlace[];
-
-  const submissions = db
-    .prepare(
-      `
-    SELECT person_id, selected_places
-    FROM form_submissions
-    WHERE form_slug = @slug
-  `,
-    )
-    .all({ slug }) as SubmissionRow[];
-
+  const people = peopleResult.rows as unknown as FormPerson[];
+  const places = placesResult.rows as unknown as FormPlace[];
+  const submissions = submissionsResult.rows as unknown as SubmissionRow[];
   const peopleByPlaceId = new Map<string, string[]>();
 
   for (const submission of submissions) {
@@ -180,16 +180,15 @@ export function getSurveyResult(slug: string) {
   };
 }
 
-// Функция для удаления формы по slug
-export function deleteSurveyRecord(slug: string): boolean {
-  const result = db
-    .prepare(
-      `
-    DELETE FROM forms
-    WHERE slug = @slug
-  `,
-    )
-    .run({ slug });
+export async function deleteSurveyRecord(slug: string): Promise<boolean> {
+  const db = await getDb();
+  const result = await db.execute({
+    sql: `
+      DELETE FROM forms
+      WHERE slug = :slug
+    `,
+    args: { slug },
+  });
 
-  return result.changes > 0;
+  return result.rowsAffected > 0;
 }

@@ -4,6 +4,8 @@ import { getSurvey } from '@/server/survey/service';
 import type { FormRecord } from '@/server/survey/types';
 import ResultsClient from './ResultsClient';
 
+export const dynamic = 'force-dynamic';
+
 type ResultsPageProps = {
   params: Promise<{
     slug: string;
@@ -16,7 +18,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
   let survey: FormRecord | null = null;
 
   try {
-    survey = getSurvey(slug);
+    survey = await getSurvey(slug);
   } catch (error) {
     if (error instanceof HttpError) {
       notFound();
